@@ -1,9 +1,9 @@
-from .stgnn_learn import STGNN
+# models/__init__.py
+
+from .stgnn import STGNN
+from .fouriergnn import FourierGNN_LearnOnly
 
 __all__ = [
-    "LearnedGraphAttn",
-    "GraphConv",
-    "MechAware_GP_STGNN_MultiTask",
-    "seq_to_pf_ma_gap",
-    "STGNN_LearnOnly",
+    "STGNN",
+    "FourierGNN_LearnOnly",
 ]
