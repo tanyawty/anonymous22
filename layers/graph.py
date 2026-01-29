@@ -1,14 +1,11 @@
-"""Graph structure learner layers."""
-# layers/graph.py
 # -*- coding: utf-8 -*-
+from __future__ import annotations
+
 """
 Graph-related layers & utilities:
-- LearnedGraphAttn: learn a dense (or masked/sparsified) adjacency from node embeddings
-- build_adjacency_from_edges: build a prior/mechanism adjacency from an edge list (CSV/DF)
-- helpers: normalize adjacency, apply masks, top-k sparsify
+- LearnedGraphAttn
+- build_adjacency_from_edges
 """
-
-from __future__ import annotations
 
 import math
 import os
