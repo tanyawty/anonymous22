@@ -22,6 +22,11 @@ import pandas as pd
 import torch
 import torch.nn as nn
 from torch.utils.data import Dataset, DataLoader, Subset
+import sys
+
+ROOT_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+sys.path.insert(0, ROOT_DIR)
+
 
 
 # -----------------------
@@ -569,5 +574,6 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 
 
