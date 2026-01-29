@@ -1,0 +1,25 @@
+# Example ablation config
+panel_prices: panel_40.csv
+panel_macro: panel_macro.csv
+edges: edges_candidates_40.csv
+window_size: 20
+horizon: 5
+epochs: 50
+batch_size: 64
+lr: 1.0e-3
+weight_decay: 1.0e-5
+seeds: [1,2,3,4,5]
+
+ablations:
+  mode_learn:
+    script: gp_mech_multitask_stgnn.py
+    args: {mode: learn}
+  mode_mech:
+    script: gp_mech_multitask_stgnn.py
+    args: {mode: mech}
+  mode_prior_residual:
+    script: gp_mech_multitask_stgnn.py
+    args: {mode: prior_residual}
+
+# Optional: randomized prior edges (generate separately with scripts/build_random_prior_edges.py)
+# random_edges: edges_random_40.csv

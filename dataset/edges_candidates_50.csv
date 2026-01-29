@@ -1,0 +1,327 @@
+source,target,template,rule,lag_hint,lag_hint_real,notes,w,s_LP,s_co,s_gr,s_corr
+px_wti,px_rbo_gas,T2_chain,px_wti->px_rbo_gas,5,10.0,upstream_to_downstream (px_wti->px_rbo_gas),0.6000000000000001,,20.0,10.015242523793079,0.08755175642823383
+px_wti,px_heating_oil,T2_chain,px_wti->px_heating_oil,5,10.0,upstream_to_downstream (px_wti->px_heating_oil),0.3734227958821774,,20.0,2.9465914130739588,0.05911801949241063
+px_soy,px_soy_oil,T2_chain,px_soy->px_soy_oil,5,6.0,upstream_to_downstream (px_soy->px_soy_oil),0.34167355066255345,,20.0,1.5917456315084437,0.057739017243247794
+px_soy,px_soy_meal,T2_chain,px_soy->px_soy_meal,5,4.0,upstream_to_downstream (px_soy->px_soy_meal),0.3268145030342713,,20.0,2.9326732942390463,0.04297117507187362
+px_corn,px_live_cattle,T2_chain,px_corn->px_live_cattle,5,6.0,upstream_to_downstream (px_corn->px_live_cattle),0.06730196892245595,,1.6164371130422883,1.2126640894292637,0.034525779219850596
+px_corn,px_lean_hogs,T2_chain,px_corn->px_lean_hogs,5,5.0,upstream_to_downstream (px_corn->px_lean_hogs),0.2,,20.0,0.265731714010054,0.017837266531896857
+px_iron_ore,px_steel_hrc,T2_chain,px_iron_ore->px_steel_hrc,5,7.0,upstream_to_downstream (px_iron_ore->px_steel_hrc),0.04692912443613174,,1.6818375340243963,1.4649105121150252,0.02537265031712426
+px_corn,px_ethanol,T2_chain,px_corn->px_ethanol,5,5.0,upstream_to_downstream (px_corn->px_ethanol),0.1298621231069768,,3.7077583601431967,1.9647492917381828,0.043023945468158596
+px_natgas,px_propane,T2_chain,px_natgas->px_propane,5,1.0,upstream_to_downstream (px_natgas->px_propane),0.16414002940852396,,9.20352071316243,2.0219236436881425,0.033722317983092
+px_wti,px_brent,T3_substitution,group:Oil,3,7.0,substitution/compl. Oil,0.29522425895317234,,20.0,2.8575966619796396,0.05808270957790053
+px_wti,px_rbo_gas,T3_substitution,group:Oil,3,10.0,substitution/compl. Oil,0.41011688462591894,,20.0,10.015242523793079,0.08755175642823383
+px_wti,px_heating_oil,T3_substitution,group:Oil,3,10.0,substitution/compl. Oil,0.2974720354312386,,20.0,2.9465914130739588,0.05911801949241063
+px_wti,px_ethanol,T3_substitution,group:Oil,3,3.0,substitution/compl. Oil,0.23466105224357486,,20.0,0.7267491465937601,0.02778779652582183
+px_brent,px_wti,T3_substitution,group:Oil,3,4.0,substitution/compl. Oil,0.4343645367209502,,20.0,15.861068692517605,0.05480270391382833
+px_brent,px_rbo_gas,T3_substitution,group:Oil,3,10.0,substitution/compl. Oil,0.3071300619097035,,20.0,3.224076035664881,0.0645093534800229
+px_brent,px_heating_oil,T3_substitution,group:Oil,3,4.0,substitution/compl. Oil,0.26857160173437605,,20.0,2.0412366530454653,0.04365943672334209
+px_brent,px_ethanol,T3_substitution,group:Oil,3,8.0,substitution/compl. Oil,0.22209909744710582,,19.57056987777733,0.27016492084985066,0.025326094602462268
+px_rbo_gas,px_wti,T3_substitution,group:Oil,3,4.0,substitution/compl. Oil,0.5219119944981561,,20.0,18.420680743952367,0.10327563387377994
+px_rbo_gas,px_brent,T3_substitution,group:Oil,3,4.0,substitution/compl. Oil,0.3565620803047369,,20.0,7.193605053939801,0.06918840681548677
+px_rbo_gas,px_heating_oil,T3_substitution,group:Oil,3,4.0,substitution/compl. Oil,0.255184979954689,,20.0,0.6512658833363693,0.045223658497319366
+px_rbo_gas,px_ethanol,T3_substitution,group:Oil,3,6.0,substitution/compl. Oil,0.23812989769577353,,20.0,0.651044720654565,0.031300526068182295
+px_heating_oil,px_wti,T3_substitution,group:Oil,3,6.0,substitution/compl. Oil,0.37720989169546626,,20.0,11.665254370354859,0.04585231172952487
+px_heating_oil,px_brent,T3_substitution,group:Oil,3,6.0,substitution/compl. Oil,0.19485520259698308,,16.083594606011513,0.5152942330357297,0.03084748302822546
+px_heating_oil,px_rbo_gas,T3_substitution,group:Oil,3,8.0,substitution/compl. Oil,0.25271888150011623,,20.0,0.4094723015514752,0.045383565982527005
+px_heating_oil,px_ethanol,T3_substitution,group:Oil,3,8.0,substitution/compl. Oil,0.27177474258683876,,20.0,1.6459677075201902,0.04982771430058168
+px_ethanol,px_wti,T3_substitution,group:Oil,3,5.0,substitution/compl. Oil,0.25593252514717035,,20.0,0.7362259064147392,0.04507032795025312
+px_ethanol,px_brent,T3_substitution,group:Oil,3,5.0,substitution/compl. Oil,0.13647386835162,,7.745931462793189,1.7839621569994901,0.04343477623361326
+px_ethanol,px_rbo_gas,T3_substitution,group:Oil,3,3.0,substitution/compl. Oil,0.22383309601851917,,20.0,0.7767409999878507,0.01849763016393309
+px_ethanol,px_heating_oil,T3_substitution,group:Oil,3,1.0,substitution/compl. Oil,0.14143958008287624,,10.572459411051135,1.3380224584791278,0.027204977920352057
+px_natgas,px_propane,T3_substitution,group:Gas,3,1.0,substitution/compl. Gas,0.142541137130742,,9.20352071316243,2.0219236436881425,0.033722317983092
+px_propane,px_natgas,T3_substitution,group:Gas,3,4.0,substitution/compl. Gas,0.04353865777180118,,1.4243635303329027,1.1738971370649214,0.02736966881646613
+px_gold,px_silver,T3_substitution,group:Precious,3,4.0,substitution/compl. Precious,0.2599267147050049,,20.0,1.8830110112831147,0.03802331911657587
+px_gold,px_platinum,T3_substitution,group:Precious,3,3.0,substitution/compl. Precious,0.10974736318887143,,1.1845655042857233,5.595627967994989,0.04374275137108104
+px_gold,px_palladium,T3_substitution,group:Precious,3,8.0,substitution/compl. Precious,0.06911322667449163,,1.0,1.920535908513075,0.04518661284674105
+px_silver,px_gold,T3_substitution,group:Precious,3,2.0,substitution/compl. Precious,0.30894962651687546,,20.0,6.398460478825671,0.03746119487829882
+px_silver,px_platinum,T3_substitution,group:Precious,3,1.0,substitution/compl. Precious,0.13612209146840934,,2.034257067636026,7.474352309151335,0.04108706824731237
+px_silver,px_palladium,T3_substitution,group:Precious,3,8.0,substitution/compl. Precious,0.08347542557654546,,1.0,3.6884401898279693,0.04102177406374831
+px_platinum,px_gold,T3_substitution,group:Precious,3,6.0,substitution/compl. Precious,0.27126545275338465,,15.414308624799313,5.0842616283452085,0.0579176821546167
+px_platinum,px_silver,T3_substitution,group:Precious,3,6.0,substitution/compl. Precious,0.27201031106438933,,20.0,1.3236249578893418,0.05291751424755725
+px_platinum,px_palladium,T3_substitution,group:Precious,3,8.0,substitution/compl. Precious,0.08135698205521946,,1.4475822578498456,1.39488190502605,0.05606161116760211
+px_palladium,px_gold,T3_substitution,group:Precious,3,3.0,substitution/compl. Precious,0.09050929548525848,,1.2017969543471638,3.531200501255908,0.04644382573141861
+px_palladium,px_silver,T3_substitution,group:Precious,3,2.0,substitution/compl. Precious,0.08323686804399574,,1.1573690459269668,3.367874634130361,0.04235597406445179
+px_palladium,px_platinum,T3_substitution,group:Precious,3,5.0,substitution/compl. Precious,0.10382758612075771,,1.2547568855366593,4.497090303177646,0.048180612002780995
+px_copper,px_aluminum,T3_substitution,group:BaseMetals,3,6.0,substitution/compl. BaseMetals,0.1008697496783744,,2.18864866607609,4.412426634938868,0.038500271889017494
+px_copper,px_zinc,T3_substitution,group:BaseMetals,3,1.0,substitution/compl. BaseMetals,0.11637063424102334,,1.523100287662814,4.888557108811285,0.052596664942032856
+px_copper,px_nickel,T3_substitution,group:BaseMetals,3,1.0,substitution/compl. BaseMetals,0.2506269104227853,,1.0804224656428618,14.447366503507602,0.08009683845409392
+px_copper,px_tin,T3_substitution,group:BaseMetals,3,1.0,substitution/compl. BaseMetals,0.3738640803298545,,20.0,8.200344646924545,0.07426578498293156
+px_copper,px_lead,T3_substitution,group:BaseMetals,3,1.0,substitution/compl. BaseMetals,0.11115201406902311,,1.0349398935167913,4.426943998426731,0.056680605061339595
+px_copper,px_iron_ore,T3_substitution,group:BaseMetals,3,1.0,substitution/compl. BaseMetals,0.3239696833544898,,1.3117098374118539,16.18028907875963,0.12241505206866539
+px_copper,px_steel_hrc,T3_substitution,group:BaseMetals,3,5.0,substitution/compl. BaseMetals,0.12993749546753486,,6.3468266657749135,4.276684407541231,0.027716101029154387
+px_aluminum,px_copper,T3_substitution,group:BaseMetals,3,4.0,substitution/compl. BaseMetals,0.07906700217099467,,2.5538120491627927,1.3928975727140687,0.04470221478295605
+px_aluminum,px_zinc,T3_substitution,group:BaseMetals,3,1.0,substitution/compl. BaseMetals,0.37171010616677624,,18.398611158184924,6.68927780160541,0.09985289990901049
+px_aluminum,px_nickel,T3_substitution,group:BaseMetals,3,1.0,substitution/compl. BaseMetals,0.3661715421123848,,2.0501720163656514,18.420680743952367,0.13038691266857821
+px_aluminum,px_tin,T3_substitution,group:BaseMetals,3,1.0,substitution/compl. BaseMetals,0.28119439359650955,,3.3414471770350653,9.284133424250761,0.13203322353811117
+px_aluminum,px_lead,T3_substitution,group:BaseMetals,3,2.0,substitution/compl. BaseMetals,0.19743822866498373,,5.966610067687577,6.341949117743592,0.06753264724243371
+px_aluminum,px_iron_ore,T3_substitution,group:BaseMetals,3,10.0,substitution/compl. BaseMetals,0.18214237971798986,,1.7126035652311147,4.523668011172913,0.10794914188868952
+px_aluminum,px_steel_hrc,T3_substitution,group:BaseMetals,3,10.0,substitution/compl. BaseMetals,0.07098072826462767,,1.169460206231828,0.3238718564167388,0.05960699799017174
+px_zinc,px_copper,T3_substitution,group:BaseMetals,3,7.0,substitution/compl. BaseMetals,0.12513561923551253,,7.6950518947340205,1.2091364465274161,0.03978158985602849
+px_zinc,px_aluminum,T3_substitution,group:BaseMetals,3,6.0,substitution/compl. BaseMetals,0.292357363110867,,20.0,0.8667535348758572,0.07363716939812248
+px_zinc,px_nickel,T3_substitution,group:BaseMetals,3,8.0,substitution/compl. BaseMetals,0.1255186400388554,,2.5623315699210814,5.016276291559069,0.04998609179307767
+px_zinc,px_tin,T3_substitution,group:BaseMetals,3,3.0,substitution/compl. BaseMetals,0.21992620838289903,,6.553010986467781,6.16507444620523,0.08244366704142536
+px_zinc,px_lead,T3_substitution,group:BaseMetals,3,10.0,substitution/compl. BaseMetals,0.06480170215412255,,1.8384412325119803,1.906163572350417,0.03458953375192546
+px_zinc,px_iron_ore,T3_substitution,group:BaseMetals,3,1.0,substitution/compl. BaseMetals,0.3556460383234534,,3.864841993036175,16.622885170275186,0.1223568049804218
+px_zinc,px_steel_hrc,T3_substitution,group:BaseMetals,3,9.0,substitution/compl. BaseMetals,0.15595294270573262,,7.1582703479458525,3.6037456135940165,0.0480320944111105
+px_nickel,px_copper,T3_substitution,group:BaseMetals,3,6.0,substitution/compl. BaseMetals,0.06443244797218994,,1.7282344070372555,1.5040190082940663,0.03885000287197254
+px_nickel,px_aluminum,T3_substitution,group:BaseMetals,3,2.0,substitution/compl. BaseMetals,0.29156320820352355,,1.866794520446771,11.76126556628303,0.1309067160509415
+px_nickel,px_zinc,T3_substitution,group:BaseMetals,3,2.0,substitution/compl. BaseMetals,0.05556136143196374,,2.320397050489118,0.7959378454154399,0.0328823674300781
+px_nickel,px_tin,T3_substitution,group:BaseMetals,3,1.0,substitution/compl. BaseMetals,0.22467615345734243,,1.5387396909201347,9.108126402956486,0.10296274244081316
+px_nickel,px_lead,T3_substitution,group:BaseMetals,3,1.0,substitution/compl. BaseMetals,0.09114613974633552,,1.5125804346147644,2.9298125970942457,0.04969849602124721
+px_nickel,px_iron_ore,T3_substitution,group:BaseMetals,3,1.0,substitution/compl. BaseMetals,0.32372899223576634,,4.361256253930289,14.0198392290516,0.11542892627337331
+px_nickel,px_steel_hrc,T3_substitution,group:BaseMetals,3,5.0,substitution/compl. BaseMetals,0.09812556902400726,,1.7117845337960598,3.101429660517828,0.052142366371763185
+px_tin,px_copper,T3_substitution,group:BaseMetals,3,7.0,substitution/compl. BaseMetals,0.21063712577818156,,17.97405293052021,0.4293536467568463,0.028258016745465034
+px_tin,px_aluminum,T3_substitution,group:BaseMetals,3,2.0,substitution/compl. BaseMetals,0.07118244308176669,,2.1255692082606927,1.1847669884057543,0.04381601382869953
+px_tin,px_zinc,T3_substitution,group:BaseMetals,3,10.0,substitution/compl. BaseMetals,0.07557371871037642,,1.5985207094092464,1.6642451448660662,0.04762121068113267
+px_tin,px_nickel,T3_substitution,group:BaseMetals,3,1.0,substitution/compl. BaseMetals,0.06142404237596668,,1.0543872674143224,2.2779096231959053,0.03522877293623448
+px_tin,px_lead,T3_substitution,group:BaseMetals,3,10.0,substitution/compl. BaseMetals,0.04944531274706971,,1.0577857007193772,1.3074226298116165,0.034142660486195485
+px_tin,px_iron_ore,T3_substitution,group:BaseMetals,3,1.0,substitution/compl. BaseMetals,0.21971940929662503,,1.3267506492873353,9.436648010837494,0.09778460398542488
+px_tin,px_steel_hrc,T3_substitution,group:BaseMetals,3,5.0,substitution/compl. BaseMetals,0.1244821498008338,,7.2247075537473275,1.893133120195953,0.03714214337447022
+px_lead,px_copper,T3_substitution,group:BaseMetals,3,2.0,substitution/compl. BaseMetals,0.24962926838953503,,20.0,2.429773658956642,0.024700947221472275
+px_lead,px_aluminum,T3_substitution,group:BaseMetals,3,6.0,substitution/compl. BaseMetals,0.31087854423799666,,20.0,2.133650013602253,0.07737149454089656
+px_lead,px_zinc,T3_substitution,group:BaseMetals,3,5.0,substitution/compl. BaseMetals,0.2570013709956508,,20.0,1.5794674565379792,0.03836331837691206
+px_lead,px_nickel,T3_substitution,group:BaseMetals,3,1.0,substitution/compl. BaseMetals,0.279331292936253,,20.0,2.9252353086818097,0.0444984450522682
+px_lead,px_tin,T3_substitution,group:BaseMetals,3,1.0,substitution/compl. BaseMetals,0.2640537139483937,,20.0,1.1901524655979316,0.04762087081846238
+px_lead,px_iron_ore,T3_substitution,group:BaseMetals,3,1.0,substitution/compl. BaseMetals,0.3236951015337287,,20.0,4.514203266844953,0.0664377139459429
+px_lead,px_steel_hrc,T3_substitution,group:BaseMetals,3,1.0,substitution/compl. BaseMetals,0.29946165143787534,,20.0,4.769390291825776,0.044357789141725924
+px_iron_ore,px_copper,T3_substitution,group:BaseMetals,3,7.0,substitution/compl. BaseMetals,0.09444540644017344,,4.325714967134214,2.6858665710836056,0.03040751628067722
+px_iron_ore,px_aluminum,T3_substitution,group:BaseMetals,3,1.0,substitution/compl. BaseMetals,0.07029773656039216,,1.5421216550474066,2.1301596258012454,0.03961020783341715
+px_iron_ore,px_zinc,T3_substitution,group:BaseMetals,3,4.0,substitution/compl. BaseMetals,0.08525255520145042,,2.2159260292924956,2.764018476201527,0.04033187451191391
+px_iron_ore,px_nickel,T3_substitution,group:BaseMetals,3,5.0,substitution/compl. BaseMetals,0.12249569329278957,,6.081293767551645,2.1940697954584785,0.04264228447987604
+px_iron_ore,px_tin,T3_substitution,group:BaseMetals,3,2.0,substitution/compl. BaseMetals,0.0661366542977957,,2.1656183527576056,1.3103536361879202,0.038223160147495876
+px_iron_ore,px_lead,T3_substitution,group:BaseMetals,3,8.0,substitution/compl. BaseMetals,0.054131440672303334,,2.0090618841429793,0.672383211530381,0.03550124613398333
+px_iron_ore,px_steel_hrc,T3_substitution,group:BaseMetals,3,7.0,substitution/compl. BaseMetals,0.0470068382326173,,1.6818375340243963,1.4649105121150252,0.02537265031712426
+px_steel_hrc,px_copper,T3_substitution,group:BaseMetals,3,1.0,substitution/compl. BaseMetals,0.3005268029136328,,4.553798599097739,16.229391057252776,0.07496887013026401
+px_steel_hrc,px_aluminum,T3_substitution,group:BaseMetals,3,1.0,substitution/compl. BaseMetals,0.2663711530921047,,1.030171140316204,12.99257579586371,0.10646034307502768
+px_steel_hrc,px_zinc,T3_substitution,group:BaseMetals,3,1.0,substitution/compl. BaseMetals,0.3306013964352685,,1.4386004292265357,18.420680743952367,0.10660079069520002
+px_steel_hrc,px_nickel,T3_substitution,group:BaseMetals,3,1.0,substitution/compl. BaseMetals,0.25637723888104613,,1.033582820612506,16.14751132432402,0.06991222437179709
+px_steel_hrc,px_tin,T3_substitution,group:BaseMetals,3,1.0,substitution/compl. BaseMetals,0.38901516105581735,,4.116634914127784,18.420680743952367,0.13127800006633242
+px_steel_hrc,px_lead,T3_substitution,group:BaseMetals,3,1.0,substitution/compl. BaseMetals,0.35319496271945944,,1.0346304049361386,18.420680743952367,0.12851989599371882
+px_steel_hrc,px_iron_ore,T3_substitution,group:BaseMetals,3,1.0,substitution/compl. BaseMetals,0.3318015661457621,,1.0561621067207487,18.420680743952367,0.11086757745677173
+px_corn,px_wheat,T3_substitution,group:Grain,3,9.0,substitution/compl. Grain,0.24983042468897482,,20.0,1.3444220795027173,0.03462115729093356
+px_corn,px_rough_rice,T3_substitution,group:Grain,3,7.0,substitution/compl. Grain,0.07507403115015518,,2.5759747861819156,2.0945306603365923,0.03494474400007919
+px_corn,px_oats,T3_substitution,group:Grain,3,9.0,substitution/compl. Grain,0.14673206736919286,,11.757028135425024,0.5414805911649777,0.028505313940521256
+px_corn,px_milling_wheat,T3_substitution,group:Grain,3,4.0,substitution/compl. Grain,0.09508823960530143,,5.301151199026237,0.8758179556833481,0.03881907313665965
+px_wheat,px_corn,T3_substitution,group:Grain,3,3.0,substitution/compl. Grain,0.27167123800251697,,20.0,1.3707055501678598,0.05221747176244557
+px_wheat,px_rough_rice,T3_substitution,group:Grain,3,5.0,substitution/compl. Grain,0.10856930663970903,,5.768744385942833,1.2030293563563874,0.04286611985996535
+px_wheat,px_oats,T3_substitution,group:Grain,3,6.0,substitution/compl. Grain,0.25028939806278194,,20.0,1.1894112532247907,0.036389255384077376
+px_wheat,px_milling_wheat,T3_substitution,group:Grain,3,5.0,substitution/compl. Grain,0.08236706654913806,,6.055815280905908,0.25401953567450825,0.027535725169699824
+px_rough_rice,px_corn,T3_substitution,group:Grain,3,9.0,substitution/compl. Grain,0.06837095175366881,,2.1378633442166244,1.291014756782848,0.04045979117642699
+px_rough_rice,px_wheat,T3_substitution,group:Grain,3,10.0,substitution/compl. Grain,0.06036037053705964,,3.1978447434925075,0.6485502002334405,0.030584251402959155
+px_rough_rice,px_oats,T3_substitution,group:Grain,3,7.0,substitution/compl. Grain,0.10040071002380044,,1.9377622829331704,4.113529576490075,0.042960273712213046
+px_rough_rice,px_milling_wheat,T3_substitution,group:Grain,3,1.0,substitution/compl. Grain,0.024623502164253804,,1.0226705278934056,0.5621137752192895,0.020877371753899577
+px_oats,px_corn,T3_substitution,group:Grain,3,9.0,substitution/compl. Grain,0.14791089898541898,,10.89634983921887,0.5684433118347602,0.036622559191992254
+px_oats,px_wheat,T3_substitution,group:Grain,3,4.0,substitution/compl. Grain,0.2552143466774519,,20.0,1.3481257904804695,0.03898372597650404
+px_oats,px_rough_rice,T3_substitution,group:Grain,3,8.0,substitution/compl. Grain,0.05342293513567868,,2.1142825455103713,0.5409047873928493,0.03520027382872996
+px_oats,px_milling_wheat,T3_substitution,group:Grain,3,1.0,substitution/compl. Grain,0.15405854313767203,,2.2034306037855003,6.241202849707529,0.06536233395534034
+px_milling_wheat,px_corn,T3_substitution,group:Grain,3,3.0,substitution/compl. Grain,0.09512011532864481,,4.652431397801988,1.8657131841761132,0.035522597702222936
+px_milling_wheat,px_wheat,T3_substitution,group:Grain,3,8.0,substitution/compl. Grain,0.06461854781276113,,4.2198262699567595,0.6047922958794851,0.025670855387187975
+px_milling_wheat,px_rough_rice,T3_substitution,group:Grain,3,10.0,substitution/compl. Grain,0.0033928629738393355,,1.1044311655398003,0.4623536752733794,0.0037370226344775677
+px_milling_wheat,px_oats,T3_substitution,group:Grain,3,8.0,substitution/compl. Grain,0.07547217735014239,,2.434658923345582,0.7596789685691913,0.04848303182636439
+px_soy,px_soy_oil,T3_substitution,group:Oilseed,3,6.0,substitution/compl. Oilseed,0.2808673357484292,,20.0,1.5917456315084437,0.057739017243247794
+px_soy,px_soy_meal,T3_substitution,group:Oilseed,3,4.0,substitution/compl. Oilseed,0.2775426232115584,,20.0,2.9326732942390463,0.04297117507187362
+px_soy,px_canola,T3_substitution,group:Oilseed,3,3.0,substitution/compl. Oilseed,0.17663311330951958,,2.5744105287940626,11.838813919917651,0.03028999823970619
+px_soy,px_palm_oil,T3_substitution,group:Oilseed,3,4.0,substitution/compl. Oilseed,0.0538308366636759,,1.6405459292178002,0.8208816801003396,0.03708820847054181
+px_soy_oil,px_soy,T3_substitution,group:Oilseed,3,3.0,substitution/compl. Oilseed,0.31672110141813636,,20.0,5.446099029844227,0.0523669958304954
+px_soy_oil,px_soy_meal,T3_substitution,group:Oilseed,3,9.0,substitution/compl. Oilseed,0.18671171018832455,,9.50947305067633,3.709183939725048,0.05199077442812584
+px_soy_oil,px_canola,T3_substitution,group:Oilseed,3,3.0,substitution/compl. Oilseed,0.2528396559259028,,3.090527985726097,18.420680743952367,0.028912423335850097
+px_soy_oil,px_palm_oil,T3_substitution,group:Oilseed,3,5.0,substitution/compl. Oilseed,0.10385370274724047,,1.849569966184727,1.7397573948898497,0.06787482097110112
+px_soy_meal,px_soy,T3_substitution,group:Oilseed,3,5.0,substitution/compl. Oilseed,0.27329596035245335,,20.0,3.8070682347345093,0.03164413254832812
+px_soy_meal,px_soy_oil,T3_substitution,group:Oilseed,3,2.0,substitution/compl. Oilseed,0.2452545428917615,,20.0,1.8105024502442457,0.02669555799580485
+px_soy_meal,px_canola,T3_substitution,group:Oilseed,3,1.0,substitution/compl. Oilseed,0.2621029673791695,,20.0,1.9326633772214752,0.03935387077971731
+px_soy_meal,px_palm_oil,T3_substitution,group:Oilseed,3,2.0,substitution/compl. Oilseed,0.0629612876877005,,2.3512728260142195,1.1325057965916505,0.03563356092755706
+px_canola,px_soy,T3_substitution,group:Oilseed,3,1.0,substitution/compl. Oilseed,0.06707204600900704,,1.7221815669447496,2.1479366183714204,0.0352691771045972
+px_canola,px_soy_oil,T3_substitution,group:Oilseed,3,5.0,substitution/compl. Oilseed,0.0487806303170077,,1.7930220177404235,0.4970524690825426,0.03456518600031237
+px_canola,px_soy_meal,T3_substitution,group:Oilseed,3,3.0,substitution/compl. Oilseed,0.19568066046416338,,12.751106246730618,2.373265321484296,0.04346171886067785
+px_canola,px_palm_oil,T3_substitution,group:Oilseed,3,2.0,substitution/compl. Oilseed,0.16851732444178,,1.036995805897826,3.5629228461164475,0.11126700281837466
+px_palm_oil,px_soy,T3_substitution,group:Oilseed,3,8.0,substitution/compl. Oilseed,0.04670178100603992,,1.3706596465822007,0.5141345847957581,0.036344302681615356
+px_palm_oil,px_soy_oil,T3_substitution,group:Oilseed,3,2.0,substitution/compl. Oilseed,0.036613459401603966,,1.2478853856578804,0.602145375105686,0.028371474960092163
+px_palm_oil,px_soy_meal,T3_substitution,group:Oilseed,3,3.0,substitution/compl. Oilseed,0.05018578256910239,,1.3287094529452825,1.1172111945009358,0.03412854546099592
+px_palm_oil,px_canola,T3_substitution,group:Oilseed,3,8.0,substitution/compl. Oilseed,0.12150441415422228,,1.1492315263181685,1.5026144501321168,0.0904369538391974
+px_coffee,px_cocoa,T3_substitution,group:Beverage,3,2.0,substitution/compl. Beverage,0.04474226661371886,,1.2769967820361374,1.2382405911008596,0.029040568457184838
+px_coffee,px_oj,T3_substitution,group:Beverage,3,1.0,substitution/compl. Beverage,0.054947823649236054,,1.0347090052131145,1.856395370802129,0.033899092544250595
+px_cocoa,px_coffee,T3_substitution,group:Beverage,3,6.0,substitution/compl. Beverage,0.0752520653341297,,4.119577086076601,0.32464955062502165,0.037732632268718085
+px_cocoa,px_oj,T3_substitution,group:Beverage,3,10.0,substitution/compl. Beverage,0.061678634995619465,,2.6944151084899386,0.35423761353531885,0.038632828745038546
+px_oj,px_coffee,T3_substitution,group:Beverage,3,2.0,substitution/compl. Beverage,0.044131048344188434,,1.377317101294162,1.4777209974707384,0.025526683567032745
+px_oj,px_cocoa,T3_substitution,group:Beverage,3,6.0,substitution/compl. Beverage,0.04485836448128312,,2.5247278834513023,0.354707736357348,0.02635358136856786
+px_live_cattle,px_lean_hogs,T3_substitution,group:Livestock,3,6.0,substitution/compl. Livestock,0.08899880195030525,,1.1720260036604022,0.9213822577862626,0.06892544860892802
+px_lean_hogs,px_live_cattle,T3_substitution,group:Livestock,3,2.0,substitution/compl. Livestock,0.27077824743341783,,20.0,2.665902837928934,0.03984613965495953
+px_sp500,px_nasdaq100,T3_substitution,group:EquityIndex,3,1.0,substitution/compl. EquityIndex,0.4516978235510932,,14.321768428762194,14.241442315758254,0.1323150777904635
+px_sp500,px_dow,T3_substitution,group:EquityIndex,3,7.0,substitution/compl. EquityIndex,0.23502862498127053,,1.834030442039006,2.8371818575649757,0.1652454845893005
+px_sp500,px_russell2000,T3_substitution,group:EquityIndex,3,7.0,substitution/compl. EquityIndex,0.37626970224173595,,1.7387197867415851,16.760891949359298,0.1562280836957217
+px_nasdaq100,px_sp500,T3_substitution,group:EquityIndex,3,7.0,substitution/compl. EquityIndex,0.3255741115911682,,13.351088611116685,4.563197739068418,0.12467567676073299
+px_nasdaq100,px_dow,T3_substitution,group:EquityIndex,3,7.0,substitution/compl. EquityIndex,0.2319608501149748,,5.9950411246804505,1.6200448132100866,0.13791938678671498
+px_nasdaq100,px_russell2000,T3_substitution,group:EquityIndex,3,7.0,substitution/compl. EquityIndex,0.2755404445753854,,2.164329436082355,10.539501374724876,0.12624944413749806
+px_dow,px_sp500,T3_substitution,group:EquityIndex,3,7.0,substitution/compl. EquityIndex,0.26547448391138784,,2.437045690297729,6.756680515044053,0.14968981871293546
+px_dow,px_nasdaq100,T3_substitution,group:EquityIndex,3,1.0,substitution/compl. EquityIndex,0.37939425049286857,,9.563288744478797,12.053888068926511,0.13384096318844288
+px_dow,px_russell2000,T3_substitution,group:EquityIndex,3,7.0,substitution/compl. EquityIndex,0.4064558872334554,,2.0600340012727965,17.9935493474092,0.16703286837803633
+px_russell2000,px_sp500,T3_substitution,group:EquityIndex,3,7.0,substitution/compl. EquityIndex,0.2888219918603689,,5.070387922807895,7.600764188049354,0.13853299660739762
+px_russell2000,px_nasdaq100,T3_substitution,group:EquityIndex,3,1.0,substitution/compl. EquityIndex,0.24388404592762994,,7.110842062920517,4.86435728057163,0.10890229516483445
+px_russell2000,px_dow,T3_substitution,group:EquityIndex,3,7.0,substitution/compl. EquityIndex,0.2991105304678452,,4.169716002615313,6.4646402049496885,0.16488656720848702
+px_us2y,px_us5y,T3_substitution,group:Rates,3,4.0,substitution/compl. Rates,0.12426525060829524,,2.7503264182901654,6.079580319506167,0.03778921033908487
+px_us2y,px_us10y,T3_substitution,group:Rates,3,4.0,substitution/compl. Rates,0.173254342373483,,2.8956134378685126,9.6659123414204,0.044302419040078485
+px_us5y,px_us2y,T3_substitution,group:Rates,3,1.0,substitution/compl. Rates,0.11127883736541458,,2.6612146270712858,5.706211883229611,0.03130806765870257
+px_us5y,px_us10y,T3_substitution,group:Rates,3,4.0,substitution/compl. Rates,0.1766700712006368,,2.645604034034577,12.53580934019707,0.023443171778166266
+px_us10y,px_us2y,T3_substitution,group:Rates,3,1.0,substitution/compl. Rates,0.13676550227886064,,3.237486938393237,6.907940822318324,0.03636255845464752
+px_us10y,px_us5y,T3_substitution,group:Rates,3,2.0,substitution/compl. Rates,0.16102795121542815,,2.6964786908938105,9.131696053886948,0.04083323641252345
+px_eur_fx,px_jpy_fx,T3_substitution,group:FX,3,6.0,substitution/compl. FX,0.16957295026034963,,9.55162310989865,3.1797149603464807,0.04239434564191879
+px_eur_fx,px_gbp_fx,T3_substitution,group:FX,3,7.0,substitution/compl. FX,0.08379972058098242,,4.017617691126843,1.1879369998004883,0.03782801922711775
+px_jpy_fx,px_eur_fx,T3_substitution,group:FX,3,6.0,substitution/compl. FX,0.05884817608585502,,1.1040805518354844,2.4234209119165397,0.031390575019583686
+px_jpy_fx,px_gbp_fx,T3_substitution,group:FX,3,10.0,substitution/compl. FX,0.09433783972198331,,1.0508284073191472,3.0428402945992374,0.05525700956215716
+px_gbp_fx,px_eur_fx,T3_substitution,group:FX,3,7.0,substitution/compl. FX,0.09608494555465764,,2.6853841821099294,2.3121125749562528,0.0492036054769727
+px_gbp_fx,px_jpy_fx,T3_substitution,group:FX,3,6.0,substitution/compl. FX,0.11475315557306873,,4.006164125951462,3.3500201547515824,0.04376483676004634
+usd_index,px_wti,T4_macro,macro_to_commodity,5,4.0,usd_index->px_wti,0.07483553256583646,,,0.2519710118680056,0.05301627111554204
+cpi,px_wti,T4_macro,macro_to_commodity,5,,cpi->px_wti,,,,,
+indpro,px_wti,T4_macro,macro_to_commodity,5,,indpro->px_wti,,,,,
+fedfunds,px_wti,T4_macro,macro_to_commodity,5,,fedfunds->px_wti,,,,,
+gs10,px_wti,T4_macro,macro_to_commodity,5,,gs10->px_wti,,,,,
+usd_index,px_brent,T4_macro,macro_to_commodity,5,4.0,usd_index->px_brent,0.12496593727023764,,,2.0332455039315427,0.058864653268928896
+cpi,px_brent,T4_macro,macro_to_commodity,5,,cpi->px_brent,,,,,
+indpro,px_brent,T4_macro,macro_to_commodity,5,,indpro->px_brent,,,,,
+fedfunds,px_brent,T4_macro,macro_to_commodity,5,,fedfunds->px_brent,,,,,
+gs10,px_brent,T4_macro,macro_to_commodity,5,,gs10->px_brent,,,,,
+usd_index,px_natgas,T4_macro,macro_to_commodity,5,8.0,usd_index->px_natgas,0.031086918544600148,,,1.3043345751358115,0.026823230888976594
+cpi,px_natgas,T4_macro,macro_to_commodity,5,,cpi->px_natgas,,,,,
+indpro,px_natgas,T4_macro,macro_to_commodity,5,,indpro->px_natgas,,,,,
+fedfunds,px_natgas,T4_macro,macro_to_commodity,5,,fedfunds->px_natgas,,,,,
+gs10,px_natgas,T4_macro,macro_to_commodity,5,,gs10->px_natgas,,,,,
+usd_index,px_rbo_gas,T4_macro,macro_to_commodity,5,4.0,usd_index->px_rbo_gas,0.1088317652370556,,,1.9809876397822044,0.05276730338528827
+cpi,px_rbo_gas,T4_macro,macro_to_commodity,5,,cpi->px_rbo_gas,,,,,
+indpro,px_rbo_gas,T4_macro,macro_to_commodity,5,,indpro->px_rbo_gas,,,,,
+fedfunds,px_rbo_gas,T4_macro,macro_to_commodity,5,,fedfunds->px_rbo_gas,,,,,
+gs10,px_rbo_gas,T4_macro,macro_to_commodity,5,,gs10->px_rbo_gas,,,,,
+usd_index,px_heating_oil,T4_macro,macro_to_commodity,5,6.0,usd_index->px_heating_oil,0.09840580019876712,,,0.37989264853099247,0.061506572939210344
+cpi,px_heating_oil,T4_macro,macro_to_commodity,5,,cpi->px_heating_oil,,,,,
+indpro,px_heating_oil,T4_macro,macro_to_commodity,5,,indpro->px_heating_oil,,,,,
+fedfunds,px_heating_oil,T4_macro,macro_to_commodity,5,,fedfunds->px_heating_oil,,,,,
+gs10,px_heating_oil,T4_macro,macro_to_commodity,5,,gs10->px_heating_oil,,,,,
+usd_index,px_gold,T4_macro,macro_to_commodity,5,3.0,usd_index->px_gold,0.07510005712884818,,,2.432946664347957,0.03547944521342557
+cpi,px_gold,T4_macro,macro_to_commodity,5,,cpi->px_gold,,,,,
+indpro,px_gold,T4_macro,macro_to_commodity,5,,indpro->px_gold,,,,,
+fedfunds,px_gold,T4_macro,macro_to_commodity,5,,fedfunds->px_gold,,,,,
+gs10,px_gold,T4_macro,macro_to_commodity,5,,gs10->px_gold,,,,,
+usd_index,px_silver,T4_macro,macro_to_commodity,5,10.0,usd_index->px_silver,0.03893848904136758,,,1.2377185706914595,0.03053510304502249
+cpi,px_silver,T4_macro,macro_to_commodity,5,,cpi->px_silver,,,,,
+indpro,px_silver,T4_macro,macro_to_commodity,5,,indpro->px_silver,,,,,
+fedfunds,px_silver,T4_macro,macro_to_commodity,5,,fedfunds->px_silver,,,,,
+gs10,px_silver,T4_macro,macro_to_commodity,5,,gs10->px_silver,,,,,
+usd_index,px_platinum,T4_macro,macro_to_commodity,5,6.0,usd_index->px_platinum,0.10797207242069036,,,4.315831828859749,0.033531390657029495
+cpi,px_platinum,T4_macro,macro_to_commodity,5,,cpi->px_platinum,,,,,
+indpro,px_platinum,T4_macro,macro_to_commodity,5,,indpro->px_platinum,,,,,
+fedfunds,px_platinum,T4_macro,macro_to_commodity,5,,fedfunds->px_platinum,,,,,
+gs10,px_platinum,T4_macro,macro_to_commodity,5,,gs10->px_platinum,,,,,
+usd_index,px_palladium,T4_macro,macro_to_commodity,5,6.0,usd_index->px_palladium,0.08835145415715981,,,1.5106732456349627,0.048295607844366116
+cpi,px_palladium,T4_macro,macro_to_commodity,5,,cpi->px_palladium,,,,,
+indpro,px_palladium,T4_macro,macro_to_commodity,5,,indpro->px_palladium,,,,,
+fedfunds,px_palladium,T4_macro,macro_to_commodity,5,,fedfunds->px_palladium,,,,,
+gs10,px_palladium,T4_macro,macro_to_commodity,5,,gs10->px_palladium,,,,,
+usd_index,px_copper,T4_macro,macro_to_commodity,5,4.0,usd_index->px_copper,0.06047163414534512,,,1.5164205656365328,0.036982379602271694
+cpi,px_copper,T4_macro,macro_to_commodity,5,,cpi->px_copper,,,,,
+indpro,px_copper,T4_macro,macro_to_commodity,5,,indpro->px_copper,,,,,
+fedfunds,px_copper,T4_macro,macro_to_commodity,5,,fedfunds->px_copper,,,,,
+gs10,px_copper,T4_macro,macro_to_commodity,5,,gs10->px_copper,,,,,
+usd_index,px_aluminum,T4_macro,macro_to_commodity,5,1.0,usd_index->px_aluminum,0.38227411889151175,,,10.242732353443095,0.09643412344565534
+cpi,px_aluminum,T4_macro,macro_to_commodity,5,,cpi->px_aluminum,,,,,
+indpro,px_aluminum,T4_macro,macro_to_commodity,5,,indpro->px_aluminum,,,,,
+fedfunds,px_aluminum,T4_macro,macro_to_commodity,5,,fedfunds->px_aluminum,,,,,
+gs10,px_aluminum,T4_macro,macro_to_commodity,5,,gs10->px_aluminum,,,,,
+usd_index,px_zinc,T4_macro,macro_to_commodity,5,1.0,usd_index->px_zinc,0.13135380625062537,,,3.538793820560305,0.04926647342456348
+cpi,px_zinc,T4_macro,macro_to_commodity,5,,cpi->px_zinc,,,,,
+indpro,px_zinc,T4_macro,macro_to_commodity,5,,indpro->px_zinc,,,,,
+fedfunds,px_zinc,T4_macro,macro_to_commodity,5,,fedfunds->px_zinc,,,,,
+gs10,px_zinc,T4_macro,macro_to_commodity,5,,gs10->px_zinc,,,,,
+usd_index,px_nickel,T4_macro,macro_to_commodity,5,1.0,usd_index->px_nickel,0.10594974438954798,,,3.2708246666000136,0.04116806337196062
+cpi,px_nickel,T4_macro,macro_to_commodity,5,,cpi->px_nickel,,,,,
+indpro,px_nickel,T4_macro,macro_to_commodity,5,,indpro->px_nickel,,,,,
+fedfunds,px_nickel,T4_macro,macro_to_commodity,5,,fedfunds->px_nickel,,,,,
+gs10,px_nickel,T4_macro,macro_to_commodity,5,,gs10->px_nickel,,,,,
+usd_index,px_tin,T4_macro,macro_to_commodity,5,1.0,usd_index->px_tin,0.23848661516618674,,,5.970173052812136,0.07289130792917205
+cpi,px_tin,T4_macro,macro_to_commodity,5,,cpi->px_tin,,,,,
+indpro,px_tin,T4_macro,macro_to_commodity,5,,indpro->px_tin,,,,,
+fedfunds,px_tin,T4_macro,macro_to_commodity,5,,fedfunds->px_tin,,,,,
+gs10,px_tin,T4_macro,macro_to_commodity,5,,gs10->px_tin,,,,,
+usd_index,px_lead,T4_macro,macro_to_commodity,5,1.0,usd_index->px_lead,0.38890054254808504,,,9.688272201327848,0.10359746870837654
+cpi,px_lead,T4_macro,macro_to_commodity,5,,cpi->px_lead,,,,,
+indpro,px_lead,T4_macro,macro_to_commodity,5,,indpro->px_lead,,,,,
+fedfunds,px_lead,T4_macro,macro_to_commodity,5,,fedfunds->px_lead,,,,,
+gs10,px_lead,T4_macro,macro_to_commodity,5,,gs10->px_lead,,,,,
+usd_index,px_iron_ore,T4_macro,macro_to_commodity,5,2.0,usd_index->px_iron_ore,0.26172536079771225,,,8.513228053308895,0.06170961441214454
+cpi,px_iron_ore,T4_macro,macro_to_commodity,5,,cpi->px_iron_ore,,,,,
+indpro,px_iron_ore,T4_macro,macro_to_commodity,5,,indpro->px_iron_ore,,,,,
+fedfunds,px_iron_ore,T4_macro,macro_to_commodity,5,,fedfunds->px_iron_ore,,,,,
+gs10,px_iron_ore,T4_macro,macro_to_commodity,5,,gs10->px_iron_ore,,,,,
+usd_index,px_steel_hrc,T4_macro,macro_to_commodity,5,2.0,usd_index->px_steel_hrc,0.07591465128767325,,,1.3971645140842734,0.04418794008197317
+cpi,px_steel_hrc,T4_macro,macro_to_commodity,5,,cpi->px_steel_hrc,,,,,
+indpro,px_steel_hrc,T4_macro,macro_to_commodity,5,,indpro->px_steel_hrc,,,,,
+fedfunds,px_steel_hrc,T4_macro,macro_to_commodity,5,,fedfunds->px_steel_hrc,,,,,
+gs10,px_steel_hrc,T4_macro,macro_to_commodity,5,,gs10->px_steel_hrc,,,,,
+usd_index,px_coal_api2,T4_macro,macro_to_commodity,5,3.0,usd_index->px_coal_api2,0.007533933259788042,,,0.6283196576774914,0.02277389532571475
+cpi,px_coal_api2,T4_macro,macro_to_commodity,5,,cpi->px_coal_api2,,,,,
+indpro,px_coal_api2,T4_macro,macro_to_commodity,5,,indpro->px_coal_api2,,,,,
+fedfunds,px_coal_api2,T4_macro,macro_to_commodity,5,,fedfunds->px_coal_api2,,,,,
+gs10,px_coal_api2,T4_macro,macro_to_commodity,5,,gs10->px_coal_api2,,,,,
+usd_index,px_uranium,T4_macro,macro_to_commodity,5,9.0,usd_index->px_uranium,0.10415580521302273,,,3.408755037149895,0.03932726707560202
+cpi,px_uranium,T4_macro,macro_to_commodity,5,,cpi->px_uranium,,,,,
+indpro,px_uranium,T4_macro,macro_to_commodity,5,,indpro->px_uranium,,,,,
+fedfunds,px_uranium,T4_macro,macro_to_commodity,5,,fedfunds->px_uranium,,,,,
+gs10,px_uranium,T4_macro,macro_to_commodity,5,,gs10->px_uranium,,,,,
+usd_index,px_ethanol,T4_macro,macro_to_commodity,5,9.0,usd_index->px_ethanol,0.04974370947979424,,,0.587422642404713,0.04016247000710497
+cpi,px_ethanol,T4_macro,macro_to_commodity,5,,cpi->px_ethanol,,,,,
+indpro,px_ethanol,T4_macro,macro_to_commodity,5,,indpro->px_ethanol,,,,,
+fedfunds,px_ethanol,T4_macro,macro_to_commodity,5,,fedfunds->px_ethanol,,,,,
+gs10,px_ethanol,T4_macro,macro_to_commodity,5,,gs10->px_ethanol,,,,,
+usd_index,px_propane,T4_macro,macro_to_commodity,5,2.0,usd_index->px_propane,0.041009491825274594,,,0.8242578101830009,0.03471686005634575
+cpi,px_propane,T4_macro,macro_to_commodity,5,,cpi->px_propane,,,,,
+indpro,px_propane,T4_macro,macro_to_commodity,5,,indpro->px_propane,,,,,
+fedfunds,px_propane,T4_macro,macro_to_commodity,5,,fedfunds->px_propane,,,,,
+gs10,px_propane,T4_macro,macro_to_commodity,5,,gs10->px_propane,,,,,
+px_wheat,px_milling_wheat,T5_T7_parity,parity:Wheat_Global,2,5.0,price parity/arbitrage,0.4,,6.055815280905908,0.25401953567450825,0.027535725169699824
+px_milling_wheat,px_wheat,T5_T7_parity,parity:Wheat_Global,2,8.0,price parity/arbitrage,0.2,,4.2198262699567595,0.6047922958794851,0.025670855387187975
+px_wti,px_wti,T1_term,intra_maturity_placeholder,1,3.0,needs multi-maturity series,0.012322532912742948,,20.0,1.1102230246251565e-16,0.06157413673995903
+px_brent,px_brent,T1_term,intra_maturity_placeholder,1,6.0,needs multi-maturity series,0.0032921630779702,,20.0,-0.0,0.031637746803640614
+px_natgas,px_natgas,T1_term,intra_maturity_placeholder,1,1.0,needs multi-maturity series,0.02164856180080739,,20.0,-0.0,0.09249066005854938
+px_rbo_gas,px_rbo_gas,T1_term,intra_maturity_placeholder,1,8.0,needs multi-maturity series,0.010292782485974851,,20.0,-0.0,0.0548453536985563
+px_heating_oil,px_heating_oil,T1_term,intra_maturity_placeholder,1,4.0,needs multi-maturity series,0.010897211505254217,,20.0,-0.0,0.056849083691258906
+px_gold,px_gold,T1_term,intra_maturity_placeholder,1,1.0,needs multi-maturity series,0.0034823404601813514,,20.0,1.1102230246251565e-16,0.03226819974246046
+px_silver,px_silver,T1_term,intra_maturity_placeholder,1,2.0,needs multi-maturity series,0.15342224415411834,,20.0,4.4616978328805016e-07,0.04291986539157518
+px_platinum,px_platinum,T1_term,intra_maturity_placeholder,1,8.0,needs multi-maturity series,0.006706310273929496,,20.0,1.5631940186723426e-13,0.042955744305593305
+px_palladium,px_palladium,T1_term,intra_maturity_placeholder,1,8.0,needs multi-maturity series,0.016082831684293124,,20.0,-0.0,0.07403982462539273
+px_copper,px_copper,T1_term,intra_maturity_placeholder,1,6.0,needs multi-maturity series,0.007786079895952167,,20.0,-0.0,0.046535436401067526
+px_corn,px_corn,T1_term,intra_maturity_placeholder,1,3.0,needs multi-maturity series,0.006369086270664699,,20.0,-0.0,0.04183799048782854
+px_soy,px_soy,T1_term,intra_maturity_placeholder,1,5.0,needs multi-maturity series,0.011210389896544925,,20.0,-0.0,0.057887294822226314
+px_wheat,px_wheat,T1_term,intra_maturity_placeholder,1,4.0,needs multi-maturity series,0.009382020933190167,,20.0,-0.0,0.05182610713476482
+px_soy_oil,px_soy_oil,T1_term,intra_maturity_placeholder,1,1.0,needs multi-maturity series,0.01736400648500104,,20.0,1.5631940186723426e-13,0.07828684997735251
+px_soy_meal,px_soy_meal,T1_term,intra_maturity_placeholder,1,7.0,needs multi-maturity series,0.007748487128442698,,20.0,1.5631940186723426e-13,0.0464106429859682
+px_sugar,px_sugar,T1_term,intra_maturity_placeholder,1,1.0,needs multi-maturity series,0.003242508743118371,,20.0,1.1102230246251565e-16,0.031473138636272324
+px_coffee,px_coffee,T1_term,intra_maturity_placeholder,1,5.0,needs multi-maturity series,0.005248435396019624,,20.0,-0.0,0.038122944225569416
+px_cocoa,px_cocoa,T1_term,intra_maturity_placeholder,1,10.0,needs multi-maturity series,0.005311911836192603,,20.0,1.1102230246251565e-16,0.03833337352295615
+px_cotton,px_cotton,T1_term,intra_maturity_placeholder,1,1.0,needs multi-maturity series,0.009477146586234069,,20.0,-0.0,0.05214145619644081
+px_oj,px_oj,T1_term,intra_maturity_placeholder,1,1.0,needs multi-maturity series,0.022328397146513156,,20.0,1.1102230246251565e-16,0.09474436786489628
+px_aluminum,px_aluminum,T1_term,intra_maturity_placeholder,1,8.0,needs multi-maturity series,0.014340078692302353,,20.0,1.1102230246251565e-16,0.0682624605318471
+px_zinc,px_zinc,T1_term,intra_maturity_placeholder,1,2.0,needs multi-maturity series,0.0,,20.0,-0.0,0.02072396588018018
+px_nickel,px_nickel,T1_term,intra_maturity_placeholder,1,2.0,needs multi-maturity series,0.023814245350673436,,20.0,1.1102230246251565e-16,0.09967007215161121
+px_tin,px_tin,T1_term,intra_maturity_placeholder,1,1.0,needs multi-maturity series,0.020750923800389162,,20.0,1.1102230246251565e-16,0.0895149189875308
+px_lead,px_lead,T1_term,intra_maturity_placeholder,1,2.0,needs multi-maturity series,0.011993643566050125,,20.0,1.1102230246251565e-16,0.06048384254952707
+px_lumber,px_lumber,T1_term,intra_maturity_placeholder,1,1.0,needs multi-maturity series,0.04050709019649117,,20.0,1.1102230246251565e-16,0.1550081727626222
+px_canola,px_canola,T1_term,intra_maturity_placeholder,1,1.0,needs multi-maturity series,0.3016156184961276,,20.0,5.275067306505514e-07,0.44551968576113443
+px_rough_rice,px_rough_rice,T1_term,intra_maturity_placeholder,1,1.0,needs multi-maturity series,0.20000000003651067,,20.0,1.1102230246251565e-16,0.683739780405953
+px_palm_oil,px_palm_oil,T1_term,intra_maturity_placeholder,1,1.0,needs multi-maturity series,0.01571618454026699,,20.0,-0.0,0.07282436035119255
+px_iron_ore,px_iron_ore,T1_term,intra_maturity_placeholder,1,4.0,needs multi-maturity series,0.015093032503148094,,20.0,-0.0,0.07075856207387365
+px_steel_hrc,px_steel_hrc,T1_term,intra_maturity_placeholder,1,7.0,needs multi-maturity series,0.015234743158876261,,20.0,-0.0,0.07122834410304661
+px_coal_api2,px_coal_api2,T1_term,intra_maturity_placeholder,1,1.0,needs multi-maturity series,0.013771423976328885,,20.0,1.1102230246251565e-16,0.06637732518337175
+px_uranium,px_uranium,T1_term,intra_maturity_placeholder,1,1.0,needs multi-maturity series,0.007794251685374493,,20.0,1.1102230246251565e-16,0.04656252640813172
+px_ethanol,px_ethanol,T1_term,intra_maturity_placeholder,1,4.0,needs multi-maturity series,0.0078086074048856705,,20.0,1.1102230246251565e-16,0.046610116753455756
+px_propane,px_propane,T1_term,intra_maturity_placeholder,1,6.0,needs multi-maturity series,0.008239140257084327,,20.0,-0.0,0.048037367322894424
+px_rubber_tsr20,px_rubber_tsr20,T1_term,intra_maturity_placeholder,1,3.0,needs multi-maturity series,0.009065833831008093,,20.0,-0.0,0.050777921889285864
+px_oats,px_oats,T1_term,intra_maturity_placeholder,1,8.0,needs multi-maturity series,0.015221482607284866,,20.0,1.1102230246251565e-16,0.07118438420493878
+px_milling_wheat,px_milling_wheat,T1_term,intra_maturity_placeholder,1,1.0,needs multi-maturity series,0.10903094733638269,,20.0,1.1102230246251565e-16,0.38217017754288646
+px_sp500,px_sp500,T1_term,intra_maturity_placeholder,1,7.0,needs multi-maturity series,0.23706757815691967,,20.0,6.081639594941835e-07,0.1436059185012193
+px_nasdaq100,px_nasdaq100,T1_term,intra_maturity_placeholder,1,1.0,needs multi-maturity series,0.026918379934175885,,20.0,1.1102230246251565e-16,0.10996052374800369
+px_dow,px_dow,T1_term,intra_maturity_placeholder,1,7.0,needs multi-maturity series,0.046358556280172616,,20.0,2.903233209395206e-13,0.17440592913354777
+px_russell2000,px_russell2000,T1_term,intra_maturity_placeholder,1,7.0,needs multi-maturity series,0.031704886910266225,,20.0,1.1102230246251565e-16,0.12582817285543282
+px_us2y,px_us2y,T1_term,intra_maturity_placeholder,1,6.0,needs multi-maturity series,0.2052473076548383,,20.0,6.081639594941835e-07,0.03811920567437986
+px_us5y,px_us5y,T1_term,intra_maturity_placeholder,1,1.0,needs multi-maturity series,0.0033193816491838175,,20.0,-0.0,0.03172797851945774
+px_us10y,px_us10y,T1_term,intra_maturity_placeholder,1,2.0,needs multi-maturity series,0.009175313906546146,,20.0,1.1102230246251565e-16,0.051140856875536204
+px_eur_fx,px_eur_fx,T1_term,intra_maturity_placeholder,1,6.0,needs multi-maturity series,0.007268418498325369,,20.0,-0.0,0.04481934793508712
+px_jpy_fx,px_jpy_fx,T1_term,intra_maturity_placeholder,1,1.0,needs multi-maturity series,0.003971993882861366,,20.0,1.1102230246251565e-16,0.033891439556828065
+px_gbp_fx,px_gbp_fx,T1_term,intra_maturity_placeholder,1,5.0,needs multi-maturity series,0.01268233080909126,,20.0,1.1102230246251565e-16,0.06276689521651921

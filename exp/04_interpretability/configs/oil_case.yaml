@@ -1,0 +1,8 @@
+# Example oil-chain case config
+panel_prices: panel_20_prices.csv
+panel_macro: panel_20_macro.csv
+edges: edges_candidates_20.csv
+ckpt: ckpt_panel20_h5_seed1.pt
+window_size: 30
+horizon: 5
+out_dir: results/interpretability/oil_case

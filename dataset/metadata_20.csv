@@ -1,0 +1,21 @@
+symbol,name,sector,chain_level,region,currency,unit,storability,macro_sensitive,policy_sensitive,substitution_group,parity_group,main_output_of,conversion_ratio
+px_wti,WTI Crude Oil,Energy,Upstream,US,USD,Barrel,Yes,True,True,Oil,Crude_US,,
+px_brent,Brent Crude Oil,Energy,Upstream,Global,USD,Barrel,Yes,True,True,Oil,Crude_Global,,
+px_natgas,Henry Hub Natural Gas,Energy,Upstream,US,USD,MMBtu,Yes,True,True,Gas,Gas_US,,
+px_rbo_gas,RBOB Gasoline,Energy,Downstream,US,USD,Gallon,Yes,True,True,Oil,Gasoline_US,px_wti,0.47
+px_heating_oil,Heating Oil,Energy,Downstream,US,USD,Gallon,Yes,True,True,Oil,Distillate_US,px_wti,0.25
+px_gold,Gold,Precious,Upstream,Global,USD,TroyOunce,Yes,True,False,Precious,Gold_Global,,
+px_silver,Silver,Precious,Upstream,Global,USD,TroyOunce,Yes,True,False,Precious,Silver_Global,,
+px_platinum,Platinum,Precious,Upstream,Global,USD,TroyOunce,Yes,True,False,Precious,Platinum_Global,,
+px_palladium,Palladium,Precious,Upstream,Global,USD,TroyOunce,Yes,True,False,Precious,Palladium_Global,,
+px_copper,Copper,Metal,Upstream,Global,USD,Pound,Yes,True,False,BaseMetals,Copper_Global,,
+px_corn,Corn,Agriculture,Upstream,US,USD,Bushel,Yes,False,True,Grain,Corn_US,,
+px_soy,Soybeans,Agriculture,Upstream,US,USD,Bushel,Yes,False,True,Oilseed,Soybeans_US,,
+px_wheat,Wheat,Agriculture,Upstream,US,USD,Bushel,Yes,False,True,Grain,Wheat_US,,
+px_soy_oil,Soybean Oil,Agriculture,Downstream,US,USD,Pound,Yes,False,True,Oilseed,SoyOil_US,px_soy,0.18
+px_soy_meal,Soybean Meal,Agriculture,Downstream,US,USD,Ton,Yes,False,True,Oilseed,SoyMeal_US,px_soy,0.79
+px_sugar,Sugar,Agriculture,Upstream,Global,USD,Pound,Yes,False,True,Sweetener,Sugar_Global,,
+px_coffee,Coffee,Agriculture,Upstream,Global,USD,Pound,Yes,False,True,Beverage,Coffee_Global,,
+px_cocoa,Cocoa,Agriculture,Upstream,Global,USD,Ton,Yes,False,True,Beverage,Cocoa_Global,,
+px_cotton,Cotton,Agriculture,Upstream,US,USD,Pound,Yes,False,True,Fiber,Cotton_US,,
+px_live_cattle,Live Cattle,Livestock,Downstream,US,USD,Pound,No,False,True,Livestock,LiveCattle_US,px_corn,
