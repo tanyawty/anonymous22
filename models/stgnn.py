@@ -46,6 +46,10 @@ class STGNN_LearnOnly(nn.Module):
         self.num_nodes = num_nodes
         self.in_dim = in_dim
         self.horizon = horizon
+    if gcn_dropout is None:
+    gcn_dropout = dropout
+if rnn_dropout is None:
+    rnn_dropout = dropout
 
         # Learn adjacency
         self.graph_learner = LearnedGraphAttn(
