@@ -82,7 +82,7 @@ def main():
     seeds = ",".join(str(s) for s in _int_list(args.seeds))
 
     repo_root = Path(__file__).resolve().parents[2]  # .../anonymous22
-    runner_py = repo_root / "exp" / "01_forecasting" / "run_gp_mech.py"
+    runner_py = repo_root / "exp" / "01_forecasting" / "run.py"
     if not runner_py.exists():
         raise FileNotFoundError(f"Cannot find {runner_py}")
 
@@ -172,3 +172,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
