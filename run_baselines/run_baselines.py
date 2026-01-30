@@ -414,7 +414,7 @@ def train_one_seed(args, seed: int) -> Dict[str, Dict[str, Tuple[float, float]]]
 
         # model zoo
         if args.model == "stgnn":
-            from models.stgnn import STGNN
+            from models.stgnn import STGNN_LearnOnly
             model = STGNN(num_nodes=N, in_dim=F_total, horizon=args.horizon,
                           gcn_hidden=args.gcn_hidden, gru_hidden=args.gru_hidden,
                           graph_hidden=args.graph_hidden, dropout=args.dropout).to(device)
@@ -574,6 +574,7 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 
 
 
