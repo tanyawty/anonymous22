@@ -27,20 +27,21 @@ class STGNN_LearnOnly(nn.Module):
     """
 
     def __init__(
-        self,
-        num_nodes: int,
-        in_dim: int,
-        horizon: int,
-        gcn_hidden: int = 32,
-        gru_hidden: int = 64,
-        graph_hidden: int = 64,
-        graph_symmetric: bool = True,
-        graph_temperature: float = 1.0,
-        graph_topk: int | None = None,
-        gcn_dropout: float = 0.0,
-        rnn_layers: int = 1,
-        rnn_dropout: float = 0.0,
-    ):
+    self,
+    num_nodes: int,
+    in_dim: int,
+    horizon: int,
+    gcn_hidden: int = 32,
+    gru_hidden: int = 64,
+    graph_hidden: int = 64,
+    graph_symmetric: bool = True,
+    graph_temperature: float = 1.0,
+    graph_topk: int | None = None,
+    dropout: float = 0.0,          
+    gcn_dropout: float | None = None,
+    rnn_layers: int = 1,
+    rnn_dropout: float | None = None,
+):
         super().__init__()
         self.num_nodes = num_nodes
         self.in_dim = in_dim
