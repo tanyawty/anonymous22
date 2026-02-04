@@ -121,73 +121,86 @@ def backtest_selection(score_mat: np.ndarray, y_true_seq: np.ndarray,
         "n": int(len(rets)),
     }
 
-def backtest_overlay(score_mat: np.ndarray, y_true_seq: np.ndarray,
-                     holding: str, step: int, ann: int,
-                     wmax: float = 1.0, clip_z: float = 2.0) -> Dict[str, float]:
+def backtest_overlay(
+    score_mat: np.ndarray,
+    y_true_seq: np.ndarray,
+    holding: str,
+    step: int,
+    ann: int,
+    wmax: float = 1.0,
+    clip_z: float = 2.0,
+    ema_alpha: float = 0.0,
+    thr: float = 0.0,
+    tcost: float = 0.0,
+) -> Dict[str, float]:
     """
-    Risk overlay on EW:
+    Risk overlay on EW (directional / allocation-style):
       - market signal m_t = mean_i(score_i(t))
       - z-score over time on test window
+      - optional EMA smoothing on z (ema_alpha in [0,1], 0 disables)
+      - optional thresholding: if |z| < thr => w_t = 0
       - position w_t = clip(z_t, -clip_z, clip_z) / clip_z * wmax
-      - portfolio return = w_t * EW_return_t
+      - portfolio return r_t = w_t * r_EW(t) - tcost * |w_t - w_{t-1}|
+    Notes:
+      - holding/step control how often we sample returns (same convention as other backtests).
+      - tcost is per-unit turnover cost in return units (e.g., 0.0001 = 1bp per full weight change).
     """
     if holding == "1":
-        realized = y_true_seq[:, :, 0]
+        realized = y_true_seq[:, :, 0]  # (T,N)
     else:
-        realized = y_true_seq.sum(axis=-1)
+        realized = y_true_seq.sum(axis=-1)  # (T,N)
 
-    # step-sampled signals
-    sig = []
-    ew = []
-    for i in range(0, score_mat.shape[0], step):
-        sig.append(float(score_mat[i].mean()))
-        ew.append(float(realized[i].mean()))
-    sig = np.asarray(sig, dtype=float)
-    ew = np.asarray(ew, dtype=float)
+    # EW realized return each step
+    r_ew = realized.mean(axis=1)  # (T,)
 
-    mu = float(sig.mean())
-    sd = float(sig.std(ddof=1)) if len(sig) > 1 else 0.0
-    if sd < 1e-12:
-        w = np.zeros_like(sig)
-    else:
-        z = (sig - mu) / (sd + 1e-12)
-        z = np.clip(z, -clip_z, clip_z)
-        w = (z / clip_z) * float(wmax)
+    # market-level predicted signal (use score spread-robust mean)
+    m = score_mat.mean(axis=1)  # (T,)
+    m_mu = float(m.mean())
+    m_sd = float(m.std(ddof=1)) if len(m) > 1 else 0.0
+    z = (m - m_mu) / (m_sd + 1e-12)
 
-    rets = w * ew
+    # EMA smoothing on z
+    if ema_alpha and ema_alpha > 0.0:
+        ema_alpha = float(ema_alpha)
+        z_s = np.empty_like(z)
+        z_s[0] = z[0]
+        for i in range(1, len(z)):
+            z_s[i] = ema_alpha * z[i] + (1.0 - ema_alpha) * z_s[i - 1]
+        z = z_s
+
+    # thresholding (no-trade zone)
+    if thr and thr > 0.0:
+        thr = float(thr)
+        z = np.where(np.abs(z) < thr, 0.0, z)
+
+    # map to weight
+    if clip_z <= 0:
+        raise ValueError("clip_z must be > 0")
+    z_clip = np.clip(z, -clip_z, clip_z)
+    w = (z_clip / clip_z) * float(wmax)  # (T,)
+
+    rets = []
+    turnovers = []
+    prev_w = 0.0
+    for i in range(0, len(w), step):
+        wi = float(w[i])
+        ri = float(r_ew[i])
+        turn = abs(wi - prev_w)
+        cost = float(tcost) * turn
+        rets.append(wi * ri - cost)
+        turnovers.append(turn)
+        prev_w = wi
+
+    rets = np.asarray(rets, dtype=float)
+    turnovers = np.asarray(turnovers, dtype=float)
+
     return {
         "mean": float(rets.mean()),
         "std": float(rets.std(ddof=1)) if len(rets) > 1 else 0.0,
         "sharpe": sharpe_ratio(rets, ann=ann),
         "n": int(len(rets)),
+        "turnover": float(turnovers.mean()) if len(turnovers) else 0.0,
     }
-
-def _read_pairs(edges_path: str, node_list: List[str], num_pairs: int,
-                weight_col: str = "w") -> List[Tuple[int, int]]:
-    """Read candidate edges and return top weighted pairs (i,j) as indices."""
-    df = pd.read_csv(edges_path)
-    idx = {n: i for i, n in enumerate(node_list)}
-    # keep rows with valid nodes
-    src = df.get("source")
-    tgt = df.get("target")
-    if src is None or tgt is None:
-        raise ValueError("edges_path must have columns: source, target (and optional w)")
-    df = df[df["source"].isin(idx) & df["target"].isin(idx)].copy()
-    if weight_col in df.columns:
-        df["_w"] = pd.to_numeric(df[weight_col], errors="coerce").fillna(1.0)
-        df = df.sort_values("_w", ascending=False)
-    # drop self loops
-    df = df[df["source"] != df["target"]]
-    pairs = []
-    for _, r in df.iterrows():
-        i = idx[r["source"]]
-        j = idx[r["target"]]
-        pairs.append((i, j))
-        if len(pairs) >= num_pairs:
-            break
-    if not pairs:
-        raise ValueError("No valid pairs found in edges file (check node names).")
-    return pairs
 
 def backtest_pairs(score_mat: np.ndarray, y_true_seq: np.ndarray,
                    edges_path: str, node_list: List[str],
@@ -239,7 +252,9 @@ def backtest_dispatch(score_mat: np.ndarray, y_true_seq: np.ndarray, args,
     if args.strategy == "overlay":
         return backtest_overlay(score_mat, y_true_seq,
                                 holding=args.holding, step=step, ann=args.ann,
-                                wmax=args.overlay_wmax, clip_z=args.overlay_clipz)
+                                wmax=args.overlay_wmax, clip_z=args.overlay_clipz,
+                                ema_alpha=args.overlay_ema, thr=args.overlay_thr,
+                                tcost=args.overlay_tcost)
     if args.strategy == "pairs":
         if not args.edges_path:
             raise ValueError("--edges_path required for strategy=pairs")
@@ -505,6 +520,12 @@ def main():
                    help="only used when strategy=selection")
     p.add_argument("--overlay_wmax", type=float, default=1.0, help="max position size for overlay strategy")
     p.add_argument("--overlay_clipz", type=float, default=2.0, help="z-score clip for overlay strategy")
+p.add_argument("--overlay_ema", type=float, default=0.0,
+               help="EMA smoothing alpha on overlay z-signal (0 disables). e.g., 0.2")
+p.add_argument("--overlay_thr", type=float, default=0.0,
+               help="No-trade threshold on |z| for overlay (0 disables). e.g., 0.5")
+p.add_argument("--overlay_tcost", type=float, default=0.0,
+               help="Per-unit turnover transaction cost for overlay (0 disables). e.g., 0.0001 = 1bp")
     p.add_argument("--num_pairs", type=int, default=50, help="number of mechanism pairs for strategy=pairs")
 
 
@@ -558,7 +579,7 @@ def main():
                            holding=args.holding, step=step, ann=args.ann)
 
     print("\n========== Backtest Protocol ==========")
-    print(f"strategy={args.strategy} | portfolio={args.portfolio} | holding={args.holding} | step={step} | top_frac={args.top_frac} | ann={args.ann} | lookback={args.lookback} | overlay_wmax={args.overlay_wmax} | overlay_clipz={args.overlay_clipz} | num_pairs={args.num_pairs}")
+    print(f"strategy={args.strategy} | portfolio={args.portfolio} | holding={args.holding} | step={step} | top_frac={args.top_frac} | ann={args.ann} | lookback={args.lookback} | overlay_wmax={args.overlay_wmax} | overlay_clipz={args.overlay_clipz} | overlay_ema={args.overlay_ema} | overlay_thr={args.overlay_thr} | overlay_tcost={args.overlay_tcost} | num_pairs={args.num_pairs}")
     print(f"[EW ] Sharpe={res_EW['sharpe']:.4f} mean={res_EW['mean']:.6f} std={res_EW['std']:.6f} n={res_EW['n']}")
     print(f"[CSM] Sharpe={res_CSM['sharpe']:.4f} mean={res_CSM['mean']:.6f} std={res_CSM['std']:.6f} n={res_CSM['n']}")
 
@@ -623,7 +644,8 @@ def main():
             res = backtest_dispatch(score_mat, y_true_seq, args, node_list=price_cols, step=step)
 
             rows.append(Row(model=f"ours_gpmech_{mode}", seed=sd, sharpe=res["sharpe"], mean=res["mean"], std=res["std"], n=res["n"]))
-            print(f"[DONE] ours_gpmech_{mode:14s} seed={sd} Sharpe={res['sharpe']:.4f} mean={res['mean']:.6f} std={res['std']:.6f} n={res['n']}")
+            _turn = f" turnover={res['turnover']:.4f}" if "turnover" in res else ""
+            print(f"[DONE] ours_gpmech_{mode:14s} seed={sd} Sharpe={res['sharpe']:.4f} mean={res['mean']:.6f} std={res['std']:.6f} n={res['n']}{_turn}")
 
     # ---------- baselines ----------
     # Baseline script already defines which model maps to which class; we replicate that mapping here.
@@ -657,7 +679,8 @@ def main():
                 res = backtest_dispatch(score_mat, y_true_seq, args, node_list=price_cols, step=step)
 
                 rows.append(Row(model=f"base_{bname}", seed=sd, sharpe=res["sharpe"], mean=res["mean"], std=res["std"], n=res["n"]))
-                print(f"[DONE] base_{bname:14s} seed={sd} Sharpe={res['sharpe']:.4f} mean={res['mean']:.6f} std={res['std']:.6f} n={res['n']}")
+                _turn = f" turnover={res['turnover']:.4f}" if "turnover" in res else ""
+                print(f"[DONE] base_{bname:14s} seed={sd} Sharpe={res['sharpe']:.4f} mean={res['mean']:.6f} std={res['std']:.6f} n={res['n']}{_turn}")
                 continue
 
             # panel baselines use the same panel dataset as your model
@@ -712,7 +735,8 @@ def main():
             res = backtest_dispatch(score_mat, y_true_seq, args, node_list=price_cols, step=step)
 
             rows.append(Row(model=f"base_{bname}", seed=sd, sharpe=res["sharpe"], mean=res["mean"], std=res["std"], n=res["n"]))
-            print(f"[DONE] base_{bname:14s} seed={sd} Sharpe={res['sharpe']:.4f} mean={res['mean']:.6f} std={res['std']:.6f} n={res['n']}")
+            _turn = f" turnover={res['turnover']:.4f}" if "turnover" in res else ""
+            print(f"[DONE] base_{bname:14s} seed={sd} Sharpe={res['sharpe']:.4f} mean={res['mean']:.6f} std={res['std']:.6f} n={res['n']}{_turn}")
 
     # ---------- summary ----------
     print("\n========== Summary (Sharpe mean ± std over seeds) ==========")
@@ -730,6 +754,9 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+
+
 
 
 
