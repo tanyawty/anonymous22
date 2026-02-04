@@ -53,6 +53,29 @@ def _ls_ret(scores: np.ndarray, realized: np.ndarray, top_frac: float) -> float:
     long_idx = idx[-K:]
     return float(realized[long_idx].mean() - realized[short_idx].mean())
 
+
+def _long_only_ret(scores: np.ndarray, realized: np.ndarray, top_frac: float) -> float:
+    """Long-only top-K, the rest is cash (0 return)."""
+    N = scores.shape[0]
+    K = max(1, int(round(N * top_frac)))
+    idx = np.argsort(scores)  # ascending
+    long_idx = idx[-K:]
+    return float(realized[long_idx].mean())
+
+def _long_only_active_ret(scores: np.ndarray, realized: np.ndarray, top_frac: float) -> float:
+    """
+    Long-only top-K but report ACTIVE return over EW benchmark.
+    This helps defend against 'you just capture market beta' critiques.
+    """
+    N = scores.shape[0]
+    K = max(1, int(round(N * top_frac)))
+    idx = np.argsort(scores)
+    long_idx = idx[-K:]
+    long_ret = realized[long_idx].mean()
+    ew = realized.mean()
+    return float(long_ret - ew)
+
+
 def backtest_long_short(score_mat: np.ndarray, y_true_seq: np.ndarray,
                         top_frac: float, holding: str, step: int, ann: int) -> Dict[str, float]:
     if holding == "1":
@@ -71,6 +94,41 @@ def backtest_long_short(score_mat: np.ndarray, y_true_seq: np.ndarray,
         "sharpe": sharpe_ratio(rets, ann=ann),
         "n": int(len(rets)),
     }
+
+def backtest_portfolio(score_mat: np.ndarray, y_true_seq: np.ndarray,
+                       top_frac: float, holding: str, step: int, ann: int,
+                       portfolio: str) -> Dict[str, float]:
+    """
+    portfolio:
+      - "longshort": long top-K, short bottom-K
+      - "longonly":  long top-K, rest cash
+      - "longonly_active": long top-K active return over EW benchmark
+    """
+    if holding == "1":
+        realized = y_true_seq[:, :, 0]
+    else:
+        realized = y_true_seq.sum(axis=-1)
+
+    rets = []
+    for i in range(0, score_mat.shape[0], step):
+        if portfolio == "longshort":
+            r = _ls_ret(score_mat[i], realized[i], top_frac)
+        elif portfolio == "longonly":
+            r = _long_only_ret(score_mat[i], realized[i], top_frac)
+        elif portfolio == "longonly_active":
+            r = _long_only_active_ret(score_mat[i], realized[i], top_frac)
+        else:
+            raise ValueError(f"Unknown portfolio={portfolio}")
+        rets.append(r)
+
+    rets = np.asarray(rets, dtype=float)
+    return {
+        "mean": float(rets.mean()),
+        "std": float(rets.std(ddof=1)) if len(rets) > 1 else 0.0,
+        "sharpe": sharpe_ratio(rets, ann=ann),
+        "n": int(len(rets)),
+    }
+
 
 def backtest_equal_weight(y_true_seq: np.ndarray, holding: str, step: int, ann: int) -> Dict[str, float]:
     if holding == "1":
@@ -318,6 +376,8 @@ def main():
     p.add_argument("--nonoverlap", action="store_true")
     p.add_argument("--lookback", type=int, default=20)
     p.add_argument("--ann", type=int, default=252)
+    p.add_argument("--portfolio", choices=["longshort", "longonly", "longonly_active"],default="longshort", help="portfolio construction for backtest")
+
 
     # model lists
     p.add_argument("--your_modes", type=str, default="prior_residual,learn,mech")
@@ -431,8 +491,9 @@ def main():
             )
 
             score_mat, y_true_seq, _tidx = collect_scores_ytrue_t_panel(model, test_loader, device, A_for_mode)
-            res = backtest_long_short(score_mat, y_true_seq, top_frac=args.top_frac,
-                                      holding=args.holding, step=step, ann=args.ann)
+            res = backtest_portfolio(score_mat, y_true_seq, top_frac=args.top_frac,
+                         holding=args.holding, step=step, ann=args.ann,
+                         portfolio=args.portfolio)
 
             rows.append(Row(model=f"ours_gpmech_{mode}", seed=sd, sharpe=res["sharpe"], mean=res["mean"], std=res["std"], n=res["n"]))
             print(f"[DONE] ours_gpmech_{mode:14s} seed={sd} Sharpe={res['sharpe']:.4f} mean={res['mean']:.6f} std={res['std']:.6f} n={res['n']}")
@@ -466,8 +527,10 @@ def main():
                                                  epochs=args.epochs, patience=args.patience, lr=args.lr, wd=args.wd)
 
                 score_mat, y_true_seq, _tidx = collect_scores_ytrue_t_patchtst(model, test_loader, device)
-                res = backtest_long_short(score_mat, y_true_seq, top_frac=args.top_frac,
-                                          holding=args.holding, step=step, ann=args.ann)
+                res = backtest_portfolio(score_mat, y_true_seq, top_frac=args.top_frac,
+                         holding=args.holding, step=step, ann=args.ann,
+                         portfolio=args.portfolio)
+
 
                 rows.append(Row(model=f"base_{bname}", seed=sd, sharpe=res["sharpe"], mean=res["mean"], std=res["std"], n=res["n"]))
                 print(f"[DONE] base_{bname:14s} seed={sd} Sharpe={res['sharpe']:.4f} mean={res['mean']:.6f} std={res['std']:.6f} n={res['n']}")
@@ -522,8 +585,10 @@ def main():
             )
 
             score_mat, y_true_seq, _tidx = collect_scores_ytrue_t_panel(model, test_loader, device, A=None)
-            res = backtest_long_short(score_mat, y_true_seq, top_frac=args.top_frac,
-                                      holding=args.holding, step=step, ann=args.ann)
+            res = backtest_portfolio(score_mat, y_true_seq, top_frac=args.top_frac,
+                         holding=args.holding, step=step, ann=args.ann,
+                         portfolio=args.portfolio)
+
 
             rows.append(Row(model=f"base_{bname}", seed=sd, sharpe=res["sharpe"], mean=res["mean"], std=res["std"], n=res["n"]))
             print(f"[DONE] base_{bname:14s} seed={sd} Sharpe={res['sharpe']:.4f} mean={res['mean']:.6f} std={res['std']:.6f} n={res['n']}")
@@ -544,5 +609,6 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 
 
