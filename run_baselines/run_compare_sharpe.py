@@ -16,6 +16,7 @@ from dataclasses import dataclass
 from typing import Dict, List, Tuple, Optional
 
 import numpy as np
+import pandas as pd
 import torch
 import torch.nn as nn
 from torch.utils.data import DataLoader, Subset
@@ -53,29 +54,6 @@ def _ls_ret(scores: np.ndarray, realized: np.ndarray, top_frac: float) -> float:
     long_idx = idx[-K:]
     return float(realized[long_idx].mean() - realized[short_idx].mean())
 
-
-def _long_only_ret(scores: np.ndarray, realized: np.ndarray, top_frac: float) -> float:
-    """Long-only top-K, the rest is cash (0 return)."""
-    N = scores.shape[0]
-    K = max(1, int(round(N * top_frac)))
-    idx = np.argsort(scores)  # ascending
-    long_idx = idx[-K:]
-    return float(realized[long_idx].mean())
-
-def _long_only_active_ret(scores: np.ndarray, realized: np.ndarray, top_frac: float) -> float:
-    """
-    Long-only top-K but report ACTIVE return over EW benchmark.
-    This helps defend against 'you just capture market beta' critiques.
-    """
-    N = scores.shape[0]
-    K = max(1, int(round(N * top_frac)))
-    idx = np.argsort(scores)
-    long_idx = idx[-K:]
-    long_ret = realized[long_idx].mean()
-    ew = realized.mean()
-    return float(long_ret - ew)
-
-
 def backtest_long_short(score_mat: np.ndarray, y_true_seq: np.ndarray,
                         top_frac: float, holding: str, step: int, ann: int) -> Dict[str, float]:
     if holding == "1":
@@ -95,15 +73,29 @@ def backtest_long_short(score_mat: np.ndarray, y_true_seq: np.ndarray,
         "n": int(len(rets)),
     }
 
-def backtest_portfolio(score_mat: np.ndarray, y_true_seq: np.ndarray,
+# ----- Portfolio / Overlay / Pairs backtests -----
+def _long_only_ret(scores: np.ndarray, realized: np.ndarray, top_frac: float) -> float:
+    """Long-only top-K, rest in cash."""
+    N = scores.shape[0]
+    K = max(1, int(round(N * top_frac)))
+    idx = np.argsort(scores)
+    long_idx = idx[-K:]
+    return float(realized[long_idx].mean())
+
+def _long_only_active_ret(scores: np.ndarray, realized: np.ndarray, top_frac: float) -> float:
+    """Long-only top-K active return over EW benchmark."""
+    N = scores.shape[0]
+    K = max(1, int(round(N * top_frac)))
+    idx = np.argsort(scores)
+    long_idx = idx[-K:]
+    long_ret = realized[long_idx].mean()
+    ew = realized.mean()
+    return float(long_ret - ew)
+
+def backtest_selection(score_mat: np.ndarray, y_true_seq: np.ndarray,
                        top_frac: float, holding: str, step: int, ann: int,
                        portfolio: str) -> Dict[str, float]:
-    """
-    portfolio:
-      - "longshort": long top-K, short bottom-K
-      - "longonly":  long top-K, rest cash
-      - "longonly_active": long top-K active return over EW benchmark
-    """
+    """Selection-based backtest (longshort / longonly / longonly_active)."""
     if holding == "1":
         realized = y_true_seq[:, :, 0]
     else:
@@ -128,6 +120,134 @@ def backtest_portfolio(score_mat: np.ndarray, y_true_seq: np.ndarray,
         "sharpe": sharpe_ratio(rets, ann=ann),
         "n": int(len(rets)),
     }
+
+def backtest_overlay(score_mat: np.ndarray, y_true_seq: np.ndarray,
+                     holding: str, step: int, ann: int,
+                     wmax: float = 1.0, clip_z: float = 2.0) -> Dict[str, float]:
+    """
+    Risk overlay on EW:
+      - market signal m_t = mean_i(score_i(t))
+      - z-score over time on test window
+      - position w_t = clip(z_t, -clip_z, clip_z) / clip_z * wmax
+      - portfolio return = w_t * EW_return_t
+    """
+    if holding == "1":
+        realized = y_true_seq[:, :, 0]
+    else:
+        realized = y_true_seq.sum(axis=-1)
+
+    # step-sampled signals
+    sig = []
+    ew = []
+    for i in range(0, score_mat.shape[0], step):
+        sig.append(float(score_mat[i].mean()))
+        ew.append(float(realized[i].mean()))
+    sig = np.asarray(sig, dtype=float)
+    ew = np.asarray(ew, dtype=float)
+
+    mu = float(sig.mean())
+    sd = float(sig.std(ddof=1)) if len(sig) > 1 else 0.0
+    if sd < 1e-12:
+        w = np.zeros_like(sig)
+    else:
+        z = (sig - mu) / (sd + 1e-12)
+        z = np.clip(z, -clip_z, clip_z)
+        w = (z / clip_z) * float(wmax)
+
+    rets = w * ew
+    return {
+        "mean": float(rets.mean()),
+        "std": float(rets.std(ddof=1)) if len(rets) > 1 else 0.0,
+        "sharpe": sharpe_ratio(rets, ann=ann),
+        "n": int(len(rets)),
+    }
+
+def _read_pairs(edges_path: str, node_list: List[str], num_pairs: int,
+                weight_col: str = "w") -> List[Tuple[int, int]]:
+    """Read candidate edges and return top weighted pairs (i,j) as indices."""
+    df = pd.read_csv(edges_path)
+    idx = {n: i for i, n in enumerate(node_list)}
+    # keep rows with valid nodes
+    src = df.get("source")
+    tgt = df.get("target")
+    if src is None or tgt is None:
+        raise ValueError("edges_path must have columns: source, target (and optional w)")
+    df = df[df["source"].isin(idx) & df["target"].isin(idx)].copy()
+    if weight_col in df.columns:
+        df["_w"] = pd.to_numeric(df[weight_col], errors="coerce").fillna(1.0)
+        df = df.sort_values("_w", ascending=False)
+    # drop self loops
+    df = df[df["source"] != df["target"]]
+    pairs = []
+    for _, r in df.iterrows():
+        i = idx[r["source"]]
+        j = idx[r["target"]]
+        pairs.append((i, j))
+        if len(pairs) >= num_pairs:
+            break
+    if not pairs:
+        raise ValueError("No valid pairs found in edges file (check node names).")
+    return pairs
+
+def backtest_pairs(score_mat: np.ndarray, y_true_seq: np.ndarray,
+                   edges_path: str, node_list: List[str],
+                   holding: str, step: int, ann: int,
+                   num_pairs: int = 50, top_frac: float = 0.2) -> Dict[str, float]:
+    """
+    Mechanism-pairs relative value:
+      - pick top weighted pairs (i,j) from edges file
+      - signal s_ij(t) = score_i(t) - score_j(t)
+      - return r_ij(t) = sign(s_ij(t)) * (real_i(t) - real_j(t))
+      - portfolio return is average across pairs (equal-weight)
+    Note: top_frac kept for interface compatibility (unused beyond potential future filtering).
+    """
+    if holding == "1":
+        realized = y_true_seq[:, :, 0]
+    else:
+        realized = y_true_seq.sum(axis=-1)
+
+    pairs = _read_pairs(edges_path, node_list=node_list, num_pairs=num_pairs)
+
+    rets = []
+    for t in range(0, score_mat.shape[0], step):
+        s = score_mat[t]  # (N,)
+        r = realized[t]   # (N,)
+        pr = []
+        for (i, j) in pairs:
+            sij = float(s[i] - s[j])
+            if sij == 0.0:
+                continue
+            pr.append(np.sign(sij) * float(r[i] - r[j]))
+        rets.append(float(np.mean(pr)) if pr else 0.0)
+
+    rets = np.asarray(rets, dtype=float)
+    return {
+        "mean": float(rets.mean()),
+        "std": float(rets.std(ddof=1)) if len(rets) > 1 else 0.0,
+        "sharpe": sharpe_ratio(rets, ann=ann),
+        "n": int(len(rets)),
+    }
+
+def backtest_dispatch(score_mat: np.ndarray, y_true_seq: np.ndarray, args,
+                      node_list: List[str], step: int) -> Dict[str, float]:
+    """Route to the chosen backtest."""
+    if args.strategy == "selection":
+        return backtest_selection(score_mat, y_true_seq,
+                                  top_frac=args.top_frac, holding=args.holding,
+                                  step=step, ann=args.ann,
+                                  portfolio=args.portfolio)
+    if args.strategy == "overlay":
+        return backtest_overlay(score_mat, y_true_seq,
+                                holding=args.holding, step=step, ann=args.ann,
+                                wmax=args.overlay_wmax, clip_z=args.overlay_clipz)
+    if args.strategy == "pairs":
+        if not args.edges_path:
+            raise ValueError("--edges_path required for strategy=pairs")
+        return backtest_pairs(score_mat, y_true_seq,
+                              edges_path=args.edges_path, node_list=node_list,
+                              holding=args.holding, step=step, ann=args.ann,
+                              num_pairs=args.num_pairs, top_frac=args.top_frac)
+    raise ValueError(f"Unknown strategy={args.strategy}")
 
 
 def backtest_equal_weight(y_true_seq: np.ndarray, holding: str, step: int, ann: int) -> Dict[str, float]:
@@ -376,7 +496,16 @@ def main():
     p.add_argument("--nonoverlap", action="store_true")
     p.add_argument("--lookback", type=int, default=20)
     p.add_argument("--ann", type=int, default=252)
-    p.add_argument("--portfolio", choices=["longshort", "longonly", "longonly_active"],default="longshort", help="portfolio construction for backtest")
+
+
+    # backtest variant
+    p.add_argument("--strategy", choices=["selection", "overlay", "pairs"], default="selection",
+                   help="selection: (longshort/longonly/active); overlay: EW risk overlay; pairs: mechanism-pairs RV")
+    p.add_argument("--portfolio", choices=["longshort", "longonly", "longonly_active"], default="longshort",
+                   help="only used when strategy=selection")
+    p.add_argument("--overlay_wmax", type=float, default=1.0, help="max position size for overlay strategy")
+    p.add_argument("--overlay_clipz", type=float, default=2.0, help="z-score clip for overlay strategy")
+    p.add_argument("--num_pairs", type=int, default=50, help="number of mechanism pairs for strategy=pairs")
 
 
     # model lists
@@ -429,7 +558,7 @@ def main():
                            holding=args.holding, step=step, ann=args.ann)
 
     print("\n========== Backtest Protocol ==========")
-    print(f"holding={args.holding} | step={step} | top_frac={args.top_frac} | ann={args.ann} | lookback={args.lookback}")
+    print(f"strategy={args.strategy} | portfolio={args.portfolio} | holding={args.holding} | step={step} | top_frac={args.top_frac} | ann={args.ann} | lookback={args.lookback} | overlay_wmax={args.overlay_wmax} | overlay_clipz={args.overlay_clipz} | num_pairs={args.num_pairs}")
     print(f"[EW ] Sharpe={res_EW['sharpe']:.4f} mean={res_EW['mean']:.6f} std={res_EW['std']:.6f} n={res_EW['n']}")
     print(f"[CSM] Sharpe={res_CSM['sharpe']:.4f} mean={res_CSM['mean']:.6f} std={res_CSM['std']:.6f} n={res_CSM['n']}")
 
@@ -491,9 +620,7 @@ def main():
             )
 
             score_mat, y_true_seq, _tidx = collect_scores_ytrue_t_panel(model, test_loader, device, A_for_mode)
-            res = backtest_portfolio(score_mat, y_true_seq, top_frac=args.top_frac,
-                         holding=args.holding, step=step, ann=args.ann,
-                         portfolio=args.portfolio)
+            res = backtest_dispatch(score_mat, y_true_seq, args, node_list=price_cols, step=step)
 
             rows.append(Row(model=f"ours_gpmech_{mode}", seed=sd, sharpe=res["sharpe"], mean=res["mean"], std=res["std"], n=res["n"]))
             print(f"[DONE] ours_gpmech_{mode:14s} seed={sd} Sharpe={res['sharpe']:.4f} mean={res['mean']:.6f} std={res['std']:.6f} n={res['n']}")
@@ -527,10 +654,7 @@ def main():
                                                  epochs=args.epochs, patience=args.patience, lr=args.lr, wd=args.wd)
 
                 score_mat, y_true_seq, _tidx = collect_scores_ytrue_t_patchtst(model, test_loader, device)
-                res = backtest_portfolio(score_mat, y_true_seq, top_frac=args.top_frac,
-                         holding=args.holding, step=step, ann=args.ann,
-                         portfolio=args.portfolio)
-
+                res = backtest_dispatch(score_mat, y_true_seq, args, node_list=price_cols, step=step)
 
                 rows.append(Row(model=f"base_{bname}", seed=sd, sharpe=res["sharpe"], mean=res["mean"], std=res["std"], n=res["n"]))
                 print(f"[DONE] base_{bname:14s} seed={sd} Sharpe={res['sharpe']:.4f} mean={res['mean']:.6f} std={res['std']:.6f} n={res['n']}")
@@ -585,10 +709,7 @@ def main():
             )
 
             score_mat, y_true_seq, _tidx = collect_scores_ytrue_t_panel(model, test_loader, device, A=None)
-            res = backtest_portfolio(score_mat, y_true_seq, top_frac=args.top_frac,
-                         holding=args.holding, step=step, ann=args.ann,
-                         portfolio=args.portfolio)
-
+            res = backtest_dispatch(score_mat, y_true_seq, args, node_list=price_cols, step=step)
 
             rows.append(Row(model=f"base_{bname}", seed=sd, sharpe=res["sharpe"], mean=res["mean"], std=res["std"], n=res["n"]))
             print(f"[DONE] base_{bname:14s} seed={sd} Sharpe={res['sharpe']:.4f} mean={res['mean']:.6f} std={res['std']:.6f} n={res['n']}")
@@ -609,6 +730,10 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+
+
+
 
 
 
