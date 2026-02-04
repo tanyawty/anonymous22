@@ -520,11 +520,11 @@ def main():
                    help="only used when strategy=selection")
     p.add_argument("--overlay_wmax", type=float, default=1.0, help="max position size for overlay strategy")
     p.add_argument("--overlay_clipz", type=float, default=2.0, help="z-score clip for overlay strategy")
-p.add_argument("--overlay_ema", type=float, default=0.0,
+    p.add_argument("--overlay_ema", type=float, default=0.0,
                help="EMA smoothing alpha on overlay z-signal (0 disables). e.g., 0.2")
-p.add_argument("--overlay_thr", type=float, default=0.0,
+    p.add_argument("--overlay_thr", type=float, default=0.0,
                help="No-trade threshold on |z| for overlay (0 disables). e.g., 0.5")
-p.add_argument("--overlay_tcost", type=float, default=0.0,
+    p.add_argument("--overlay_tcost", type=float, default=0.0,
                help="Per-unit turnover transaction cost for overlay (0 disables). e.g., 0.0001 = 1bp")
     p.add_argument("--num_pairs", type=int, default=50, help="number of mechanism pairs for strategy=pairs")
 
@@ -754,6 +754,7 @@ p.add_argument("--overlay_tcost", type=float, default=0.0,
 
 if __name__ == "__main__":
     main()
+
 
 
 
