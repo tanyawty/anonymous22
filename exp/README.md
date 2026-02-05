@@ -1,12 +1,11 @@
 # Experiments (`exp/`)
 
-This folder contains **four experiment suites**, aligned with the paper:
+This folder contains **five experiment suites**, aligned with the paper:
 
-1. **Forecasting performance** (ours vs baselines): `exp/01_forecasting/`
-2. **Ablations** (learn / mech / prior_residual, random prior, etc.): `exp/02_ablation/`
-3. **Graph-structure stability** (Frobenius / Cosine / Top-k Jaccard): `exp/03_graph_stability/`
-4. **Interpretability case studies** (oil chain, triptych export): `exp/04_interpretability/`
+1. **Forecasting performance** (ours vs baselines)
+2. **Ablations** (learn / mech / prior_residual, random prior, etc.)
+3. **Graph-structure stability** (Frobenius / Cosine / Top-k Jaccard):export_triptych_topk.py
+4. **Interpretability case studies** (oil chain, triptych export):case_oil_study.py
+5. **Trading Validation** (Sharp Ratio) py file is in run_baslines(run_compare_sharpe_MAGN_v3.py)
 
-All experiment scripts save outputs under `results/` with a unified structure.
 
-> Tip: run each suite from the **repo root** so imports like `data_provider`, `models`, and `utils` work.
