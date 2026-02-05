@@ -185,7 +185,7 @@ Stability metrics are **not optimized during training** and are treated as indep
 
 ### Predictive Accuracy
 
-HPGN achieves **best or near‑best average accuracy** across tasks and horizons, remaining competitive with strong temporal baselines.
+MAGN achieves **best or near‑best average accuracy** across tasks and horizons, remaining competitive with strong temporal baselines.
 
 ### Structural Stability
 
