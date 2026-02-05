@@ -305,7 +305,7 @@ for M in ["gru", "lstm", "tcn", "transformer", "mlp"]:
       --out_csv results/{M}.csv
 
 # Run All Ablation Exp
-!python exp/run_ablation_all.py \
+python exp/run_ablation_all.py \
   --panels 20,30,40,50 \
   --horizons 5,10,15 \
   --modes mech,learn,prior_residual \
