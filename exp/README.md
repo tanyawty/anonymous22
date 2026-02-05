@@ -36,3 +36,4 @@ for SEED in [1,2,3,4,5]:
   --epochs 50 \
   --out_dir graph_stability_panel40_h5_r \
   --probe test
+```
