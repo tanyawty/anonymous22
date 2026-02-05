@@ -43,13 +43,13 @@ Structural stability is treated as a **first‑class evaluation objective**, alo
 
 ---
 
-## 3. Method Overview: HPGN
+## 3. Method Overview: MAGN
 
-We propose the **Hybrid‑Prior Graph Network (HPGN)**, a mechanism‑anchored adaptive graph learning framework.
+We propose the **Mechanism-Anchored Graph Network (MAGN)**, a mechanism‑anchored adaptive graph learning framework.
 
-### 3.1 Automatic Mechanism Graph Construction (AMGC)
+### 3.1 Mechanism-Based Static Prior Graph Construction (MSPGC)
 
-AMGC constructs a **static, deterministic prior graph** from structured economic metadata.
+MSPGC constructs a **static, deterministic prior graph** from structured economic metadata.
 
 The prior graph encodes **economically admissible relations**, including:
 
@@ -248,20 +248,20 @@ ls dataset/derived
 # run main experiments
 python exp/run.py \
   --mode prior_residual \
-  --price_path dataset/panel_20.csv \
+  --price_path dataset/panel_30.csv \
   --macro_path dataset/panel_macro.csv \
-  --edges_path dataset/derived/edges_candidates_20.csv \
+  --edges_path dataset/derived/edges_candidates_30.csv \
   --window 20 --horizon 5 \
-  --epochs 10 --batch 32 \
+  --epochs 50 --batch 32 \
   --seeds 1,2,3,4,5 \
-  --out_csv results/gp_mech_stgnn_mech_panel20_h5.csv
+  --out_csv results/gp_mech_stgnn_mech_panel30_h5.csv
 
 # run baselines
-PRICE="dataset/panel_20.csv"
+PRICE="dataset/panel_30.csv"
 MACRO="dataset/panel_macro.csv"
 WINDOW=20
 HORIZON=5
-EPOCHS=10
+EPOCHS=50
 BATCH=32
 SEEDS="1,2,3,4,5"
 
@@ -303,13 +303,10 @@ for M in ["gru", "lstm", "tcn", "transformer", "mlp"]:
       --epochs {EPOCHS} --batch {BATCH} \
       --seeds {SEEDS} \
       --out_csv results/{M}.csv
-```
-
-Refer to individual scripts for detailed arguments and configurations.
 
 # Run All Ablation Exp
 !python exp/run_ablation_all.py \
-  --panels 20,30,40 \
+  --panels 20,30,40,50 \
   --horizons 5,10,15 \
   --modes mech,learn,prior_residual \
   --seeds 1,2,3,4,5 \
@@ -340,6 +337,11 @@ python run_baselines/run_compare_sharpe_MAGN_v3.py \
   --pairs_pos_clip 1.0 \
   --pairs_tcost 0.0001 \
   --pairs_weighted
+```
+
+Refer to individual scripts for detailed arguments and configurations.
+
+
 
 ## 10. Reproducibility
 
