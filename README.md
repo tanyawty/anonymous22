@@ -246,7 +246,7 @@ PYTHONPATH="$PWD" python scripts/prepare_dataset.py --dataset_dir dataset --pane
 ls dataset/derived
 
 # run main experiments
-python exp/01_forecasting/run.py \
+python exp/run.py \
   --mode prior_residual \
   --price_path dataset/panel_20.csv \
   --macro_path dataset/panel_macro.csv \
@@ -307,7 +307,39 @@ for M in ["gru", "lstm", "tcn", "transformer", "mlp"]:
 
 Refer to individual scripts for detailed arguments and configurations.
 
----
+# Run All Ablation Exp
+!python exp/run_ablation_all.py \
+  --panels 20,30,40 \
+  --horizons 5,10,15 \
+  --modes mech,learn,prior_residual \
+  --seeds 1,2,3,4,5 \
+  --window 20 --epochs 10 --batch 32 \
+  --price_dir dataset \
+  --macro_path dataset/panel_macro.csv \
+  --edges_dir dataset/derived \
+  --out_dir results \
+  --skip_existing
+
+# Run Trading Validation
+python run_baselines/run_compare_sharpe_MAGN_v3.py \
+  --gp_runner_py exp/run.py \
+  --baseline_runner_py run_baselines/run_baselines.py \
+  --price_path dataset/panel_30.csv \
+  --macro_path dataset/panel_macro.csv \
+  --edges_path dataset/edges_candidates_30.csv \
+  --window 20 --horizon 5 \
+  --epochs 80 --patience 10 --batch 32 \
+  --your_modes prior_residual,learn,mech \
+  --baselines stgnn,fouriergnn,patchtst,gru,lstm,transformer,mlp \
+  --seeds 1,2,3,4,5 \
+  --holding 1 --nonoverlap --ann 252 \
+  --strategy pairs \
+  --num_pairs 50 \
+  --pairs_ema 0.1 \
+  --pairs_thr 0 \
+  --pairs_pos_clip 1.0 \
+  --pairs_tcost 0.0001 \
+  --pairs_weighted
 
 ## 10. Reproducibility
 
