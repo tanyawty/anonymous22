@@ -27,7 +27,7 @@ import torch.nn as nn
 from torch.utils.data import Dataset, DataLoader, Subset
 
 # --- make repo root importable (critical) ---
-ROOT_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "../.."))
+ROOT_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 sys.path.insert(0, ROOT_DIR)
 
 
