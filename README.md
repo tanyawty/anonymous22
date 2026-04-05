@@ -3,7 +3,7 @@
 This repository provides the **official implementation** of the paper:
 
 > **Mechanism‑Anchored Graph Learning for Stable Structural Modeling in Commodity Futures**
-> *(submitted to KDD / IEEE ICBC)*
+
 
 The project studies **structural stability and interpretability in graph‑based multivariate time‑series forecasting** under high‑noise financial environments, with a focus on **commodity futures markets**.
 
