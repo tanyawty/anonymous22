@@ -6,6 +6,9 @@
 #   - fouriergnn (learn-only)
 #   - patchtst (HF PatchTST wrapper)
 #   - classical: gru/lstm/tcn/transformer/mlp
+#   - forecastgrapher  [NEW] adaptive graph + temporal attention
+#   - timexer          [NEW] endo/exo cross-attention transformer
+#   - crossformer      [NEW] 2-stage temporal + cross-dimension attention
 #
 # Metrics: PF/MA/GAP derived from y_seq (B,N,H), report MAE/RMSE over all samples*assets.
 
@@ -26,7 +29,6 @@ import sys
 
 ROOT_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 sys.path.insert(0, ROOT_DIR)
-
 
 
 # -----------------------
@@ -94,10 +96,9 @@ def mae_rmse_np(y_true: np.ndarray, y_pred: np.ndarray) -> Tuple[float, float]:
 
 
 # -----------------------
-# Dataset A: Panel-graph style (for STGNN/Fourier/Classical)
+# Dataset A: Panel-graph style (for STGNN/Fourier/Classical/ForecastGrapher/TimeXer/Crossformer)
 #   x_seq: (L,N,F_total)
 #   y_seq: (N,H)
-# Mirrors your gp_mech_multitask_stgnn logic
 # -----------------------
 class PanelGraphDataset(Dataset):
     def __init__(self, returns_df: pd.DataFrame, price_df: pd.DataFrame, macro_df: pd.DataFrame,
@@ -279,7 +280,7 @@ def evaluate_seq_model(model, loader, device) -> Dict[str, Tuple[float, float]]:
 
     for x, y, _ in loader:
         x = x.to(device)
-        y = y.to(device)  # (B,N,H) for panel models OR (B,H,N) for patchtst dataset (handled upstream)
+        y = y.to(device)  # (B,N,H)
 
         y_pred, _, _ = model(x, None)  # must return (B,N,H)
 
@@ -332,8 +333,6 @@ def train_one_seed(args, seed: int) -> Dict[str, Dict[str, Tuple[float, float]]]
                                   d_model=args.d_model, n_layers=args.n_layers, n_heads=args.n_heads,
                                   dropout=args.dropout).to(device)
 
-        # PatchTSTDataset yields y: (B,H,N); wrapper outputs y_seq: (B,N,H)
-        # So we convert y in the loop.
         mse = nn.MSELoss()
         opt = torch.optim.AdamW(model.parameters(), lr=args.lr, weight_decay=args.wd)
 
@@ -346,7 +345,7 @@ def train_one_seed(args, seed: int) -> Dict[str, Dict[str, Tuple[float, float]]]
             total = 0.0
             n = 0
             for x, y, _ in loader:
-                x = x.to(device)                 # (B,L,N+Fm)
+                x = x.to(device)
                 y = y.to(device)                 # (B,H,N)
                 y_seq = y.permute(0, 2, 1)        # (B,N,H)
 
@@ -384,18 +383,21 @@ def train_one_seed(args, seed: int) -> Dict[str, Dict[str, Tuple[float, float]]]
         if best_state is not None:
             model.load_state_dict(best_state)
 
-        # For evaluation, build a loader that yields y_seq (B,N,H)
         def wrap_loader(loader):
             for x, y, idx in loader:
                 yield x, y.permute(0, 2, 1), idx
 
-        val_metrics = evaluate_seq_model(model, wrap_loader(val_loader), device)
+        val_metrics  = evaluate_seq_model(model, wrap_loader(val_loader), device)
         test_metrics = evaluate_seq_model(model, wrap_loader(test_loader), device)
 
         return {"val": val_metrics, "test": test_metrics}
 
     else:
-        # Panel models (STGNN/Fourier/Classical): x_seq (B,L,N,F) ; y_seq (B,N,H)
+        # -------------------------------------------------------
+        # Panel models: x_seq (B,L,N,F) ; y_seq (B,N,H)
+        # Includes: stgnn, fouriergnn, gru, lstm, tcn, transformer,
+        #           mlp, forecastgrapher, timexer, crossformer
+        # -------------------------------------------------------
         ds = PanelGraphDataset(returns_df, price_df, macro_df, window_size=args.window, horizon=args.horizon)
         split = make_time_split_from_t(ds.valid_t, T=len(returns_df), train_ratio=args.train_ratio, val_ratio=args.val_ratio)
         train_ds = Subset(ds, split.train_ids)
@@ -412,7 +414,7 @@ def train_one_seed(args, seed: int) -> Dict[str, Dict[str, Tuple[float, float]]]
         assert L == args.window
         assert y0.shape == (N, args.horizon)
 
-        # model zoo
+        # ---- model zoo ----
         if args.model == "stgnn":
             from models.stgnn import STGNN_LearnOnly
             model = STGNN_LearnOnly(num_nodes=N, in_dim=F_total, horizon=args.horizon,
@@ -446,10 +448,46 @@ def train_one_seed(args, seed: int) -> Dict[str, Dict[str, Tuple[float, float]]]
                                              d_model=args.d_model, nhead=args.n_heads, num_layers=args.n_layers,
                                              dropout=args.dropout, use_graph_logging=True,
                                              graph_hidden=args.graph_hidden).to(device)
-            else:
+            else:  # mlp
                 model = MLP_Baseline(num_nodes=N, in_dim=F_total, horizon=args.horizon, window_len=args.window,
                                      hidden_dim=args.d_model, dropout=args.dropout, use_graph_logging=True,
                                      graph_hidden=args.graph_hidden).to(device)
+
+        # ---- NEW BASELINES ----------------------------------------
+
+        elif args.model == "forecastgrapher":
+            from models.forecastgrapher import ForecastGrapher
+            model = ForecastGrapher(
+                num_nodes=N, in_dim=F_total, horizon=args.horizon,
+                window_len=args.window,
+                d_model=args.d_model, n_heads=args.n_heads,
+                n_layers=args.n_layers, gcn_steps=args.gcn_steps,
+                graph_hidden=args.graph_hidden, dropout=args.dropout,
+            ).to(device)
+
+        elif args.model == "timexer":
+            from models.timexer import TimeXer
+            model = TimeXer(
+                num_nodes=N, in_dim=F_total, horizon=args.horizon,
+                window_len=args.window,
+                patch_len=args.patch_len, patch_stride=args.patch_stride,
+                d_model=args.d_model, n_heads=args.n_heads,
+                n_layers=args.n_layers, dropout=args.dropout,
+            ).to(device)
+
+        elif args.model == "crossformer":
+            from models.crossformer import Crossformer
+            model = Crossformer(
+                num_nodes=N, in_dim=F_total, horizon=args.horizon,
+                window_len=args.window,
+                seg_len=args.seg_len,
+                d_model=args.d_model, n_heads=args.n_heads,
+                n_layers=args.n_layers, n_routers=args.n_routers,
+                dropout=args.dropout,
+            ).to(device)
+
+        # -----------------------------------------------------------
+
         else:
             raise ValueError(f"Unknown model: {args.model}")
 
@@ -465,14 +503,15 @@ def train_one_seed(args, seed: int) -> Dict[str, Dict[str, Tuple[float, float]]]
             total = 0.0
             n = 0
             for x_seq, y_seq, _ in loader:
-                x_seq = x_seq.to(device)                      # (B,L,N,F)
-                y_seq = y_seq.to(device)                      # (B,N,H)
+                x_seq = x_seq.to(device)
+                y_seq = y_seq.to(device)
 
                 if train:
                     opt.zero_grad()
                     y_pred, _, _ = model(x_seq, None)
                     loss = mse(y_pred, y_seq)
                     loss.backward()
+                    torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0)
                     opt.step()
                 else:
                     with torch.no_grad():
@@ -501,7 +540,7 @@ def train_one_seed(args, seed: int) -> Dict[str, Dict[str, Tuple[float, float]]]
         if best_state is not None:
             model.load_state_dict(best_state)
 
-        val_metrics = evaluate_seq_model(model, val_loader, device)
+        val_metrics  = evaluate_seq_model(model, val_loader, device)
         test_metrics = evaluate_seq_model(model, test_loader, device)
 
         return {"val": val_metrics, "test": test_metrics}
@@ -511,36 +550,53 @@ def main():
     p = argparse.ArgumentParser()
 
     p.add_argument("--model", type=str, required=True,
-                   help="stgnn | fouriergnn | patchtst | gru | lstm | tcn | transformer | mlp")
+                   help=("stgnn | fouriergnn | patchtst | gru | lstm | tcn | transformer | mlp "
+                         "| forecastgrapher | timexer | crossformer"))
     p.add_argument("--price_path", type=str, required=True)
     p.add_argument("--macro_path", type=str, required=True)
 
-    p.add_argument("--window", type=int, default=20)
+    p.add_argument("--window",  type=int, default=20)
     p.add_argument("--horizon", type=int, default=5)
 
     p.add_argument("--train_ratio", type=float, default=0.7)
-    p.add_argument("--val_ratio", type=float, default=0.15)
+    p.add_argument("--val_ratio",   type=float, default=0.15)
 
-    p.add_argument("--batch", type=int, default=32)
-    p.add_argument("--epochs", type=int, default=20)
+    p.add_argument("--batch",    type=int, default=32)
+    p.add_argument("--epochs",   type=int, default=20)
     p.add_argument("--patience", type=int, default=5)
 
-    p.add_argument("--lr", type=float, default=1e-3)
-    p.add_argument("--wd", type=float, default=0.0)
+    p.add_argument("--lr",      type=float, default=1e-3)
+    p.add_argument("--wd",      type=float, default=0.0)
     p.add_argument("--dropout", type=float, default=0.1)
 
     # shared dims
-    p.add_argument("--d_model", type=int, default=128)
-    p.add_argument("--n_layers", type=int, default=3)
-    p.add_argument("--n_heads", type=int, default=8)
+    p.add_argument("--d_model",  type=int, default=64)
+    p.add_argument("--n_layers", type=int, default=2)
+    p.add_argument("--n_heads",  type=int, default=4)
 
-    # stgnn dims (also reused as classical defaults)
-    p.add_argument("--gcn_hidden", type=int, default=32)
-    p.add_argument("--gru_hidden", type=int, default=64)
+    # stgnn / classical dims
+    p.add_argument("--gcn_hidden",   type=int, default=32)
+    p.add_argument("--gru_hidden",   type=int, default=64)
     p.add_argument("--graph_hidden", type=int, default=32)
 
-    p.add_argument("--seeds", type=str, default="1,2,3,4,5")
-    p.add_argument("--cpu", action="store_true")
+    # ForecastGrapher
+    p.add_argument("--gcn_steps", type=int, default=2,
+                   help="Number of GCN layers in ForecastGrapher")
+
+    # TimeXer
+    p.add_argument("--patch_len",    type=int, default=4,
+                   help="Patch length for TimeXer endogenous patching")
+    p.add_argument("--patch_stride", type=int, default=2,
+                   help="Patch stride for TimeXer")
+
+    # Crossformer
+    p.add_argument("--seg_len",   type=int, default=4,
+                   help="Segment length for Crossformer")
+    p.add_argument("--n_routers", type=int, default=4,
+                   help="Number of router tokens in Crossformer cross-dimension stage")
+
+    p.add_argument("--seeds",   type=str, default="1,2,3,4,5")
+    p.add_argument("--cpu",     action="store_true")
     p.add_argument("--out_csv", type=str, default="")
 
     args = p.parse_args()
@@ -555,11 +611,11 @@ def main():
                 mae, rmse = res[split][task]
                 rows.append({
                     "model": args.model,
-                    "seed": sd,
+                    "seed":  sd,
                     "split": split,
-                    "task": task,
-                    "mae": mae,
-                    "rmse": rmse,
+                    "task":  task,
+                    "mae":   mae,
+                    "rmse":  rmse,
                 })
 
         print(f"[seed={sd}] val PF(MAE/RMSE)={res['val']['PF']} | test PF(MAE/RMSE)={res['test']['PF']}")
@@ -572,10 +628,6 @@ def main():
     else:
         print(df.groupby(["model", "split", "task"])[["mae", "rmse"]].mean())
 
+
 if __name__ == "__main__":
     main()
-
-
-
-
-
