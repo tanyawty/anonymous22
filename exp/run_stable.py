@@ -168,7 +168,14 @@ def train_one_seed(args, seed):
         A_mech = build_adjacency_from_edges(
             args.edges_path, list(price_cols),
             weight_col=args.weight_col, default_weight=args.default_weight,
-        ).to(device)
+        )
+        train_end = int(len(returns_df) * args.train_ratio)
+        train_rets = returns_df.iloc[:train_end]
+        corr_t = torch.tensor(
+            train_rets.corr().fillna(0).abs().values, dtype=torch.float32)
+        A_mech = A_mech * corr_t
+        row_sum = A_mech.sum(dim=1, keepdim=True).clamp_min(1e-12)
+        A_mech = (A_mech / row_sum).to(device)
 
     from models.gp_mech_stgnn import GPMechSTGNN
     model = GPMechSTGNN(
