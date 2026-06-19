@@ -25,12 +25,19 @@ class GPMechSTGNN(nn.Module):
         self.fixed_gamma = float(fixed_gamma)
 
         self.graph_input_norm = nn.LayerNorm(in_dim) if use_graph_input_norm else None
+
         self.graph_learner = LearnedGraphAttn(
             in_dim=in_dim, hidden_dim=graph_hidden,
-            symmetric=True, topk=graph_topk)   # ← topk 传进来
-        self.gcn = GraphConv(
+            symmetric=True, topk=graph_topk)
+
+        # ── 双路径 GCN，各自独立权重 ──────────────────────────────
+        self.gcn_mech = GraphConv(
             in_dim=in_dim, out_dim=gcn_hidden,
             activation="relu", dropout=gcn_dropout)
+        self.gcn_learn = GraphConv(
+            in_dim=in_dim, out_dim=gcn_hidden,
+            activation="relu", dropout=gcn_dropout)
+
         self.temporal = NodeWiseGRUEncoder(
             in_dim=gcn_hidden, hidden_dim=gru_hidden,
             num_layers=rnn_layers, dropout=rnn_dropout, bidirectional=False)
@@ -45,42 +52,40 @@ class GPMechSTGNN(nn.Module):
     def gamma_stats(self):
         return {"value": self._gamma().detach().item()}
 
-    @staticmethod
-    def _row_norm(A):
-        return A / A.sum(dim=-1, keepdim=True).clamp_min(1e-12)
-
-    def _select_adj(self, A_learn, A_mech, B):
-        device = A_learn.device
-        if self.mode == "learn" or A_mech is None:
-            return A_learn, torch.tensor(0.0, device=device)
-
-        A_mech_b = A_mech.unsqueeze(0).expand(B, -1, -1).to(device)
-
-        if self.mode == "mech":
-            return A_mech_b, torch.tensor(1.0, device=device)
-
-        # ── Fix: row-normalize A_mech 和 A_learn 同量纲 ──────────────
-        A_mech_b = self._row_norm(A_mech_b)
-
-        gamma = self._gamma()
-        if self.gate_type == "node":
-            g = gamma.view(1, self.num_nodes, 1)
-        elif self.gate_type == "edge":
-            g = gamma.unsqueeze(0)
-        else:
-            g = gamma
-
-        return g * A_mech_b + (1.0 - g) * A_learn, gamma
-
     def forward(self, x_seq, A_mech):
         B, L, N, F = x_seq.shape
+
+        # ── A_learn ────────────────────────────────────────────────
         H_node = x_seq.mean(dim=1)
         if self.graph_input_norm is not None:
             H_node = self.graph_input_norm(H_node)
-        A_learn = self.graph_learner(H_node)
-        A_dyn, gamma = self._select_adj(A_learn, A_mech, B)
-        H_list = [self.gcn(x_seq[:, t], A_dyn) for t in range(L)]
-        h_last = self.temporal(torch.stack(H_list, dim=1))
+        A_learn = self.graph_learner(H_node)   # (B, N, N)
+
+        # ── 双路径 GCN 逐时间步 ────────────────────────────────────
+        device = x_seq.device
+        gamma = self._gamma()
+
+        if self.mode == "learn" or A_mech is None:
+            # 只用学习图路径
+            H_list = [self.gcn_learn(x_seq[:, t], A_learn) for t in range(L)]
+
+        elif self.mode == "mech":
+            # 只用机制图路径
+            A_mech_b = A_mech.unsqueeze(0).expand(B, -1, -1).to(device)
+            H_list = [self.gcn_mech(x_seq[:, t], A_mech_b) for t in range(L)]
+
+        else:  # prior_residual — 双路径 feature 混合
+            A_mech_b = A_mech.unsqueeze(0).expand(B, -1, -1).to(device)
+            H_list = []
+            for t in range(L):
+                Xt = x_seq[:, t]
+                H_m = self.gcn_mech(Xt, A_mech_b)    # (B, N, gcn_h)
+                H_l = self.gcn_learn(Xt, A_learn)     # (B, N, gcn_h)
+                # feature 空间混合，γ 梯度 ∝ (H_m - H_l) ≠ 0
+                H_list.append(gamma * H_m + (1.0 - gamma) * H_l)
+
+        H_seq = torch.stack(H_list, dim=1)   # (B, L, N, gcn_h)
+        h_last = self.temporal(H_seq)
         return self.head(h_last), A_learn, gamma
 
 
