@@ -1,15 +1,26 @@
+#!/usr/bin/env python3
 # exp/run_gate_ablation.py
-# Run script for gate-granularity ablation.
-# Identical to run_stable.py except:
-#   - adds --gate_type global | node | edge
-#   - prints gamma_stats() after each seed (to catch gate collapse)
-#   - records gate_type in the output CSV
+#
+# Gate-granularity ablation: global vs node vs feat gate.
+# Uses DUAL-PATH GCN (gp_mech_stgnn_gate.py) — feature-space mixing.
+# gamma is fixed at 0.5 (optimum from gamma sensitivity analysis) so
+# the only variable between runs is the gate granularity.
+#
+# Usage:
+#   python exp/run_gate_ablation.py \
+#       --price_path data/prices.csv \
+#       --macro_path data/macro.csv  \
+#       --edges_path data/edges.csv  \
+#       --gate_types global node feat \
+#       --fixed_gamma 0.5 \
+#       --seeds 0 1 2 3 4
+#
+# Output: summary table printed to stdout + gate_ablation_results.csv
 
 import os
 import sys
 import random
 import argparse
-from typing import Dict, Tuple
 
 import numpy as np
 import pandas as pd
@@ -18,12 +29,12 @@ import torch
 import torch.nn as nn
 from torch.utils.data import Dataset, DataLoader, Subset
 
-ROOT_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "../.."))
+ROOT_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 sys.path.insert(0, ROOT_DIR)
 
 
 # ─────────────────────────────────────────────────────────────────
-# Helpers (unchanged from run_stable.py)
+# Helpers
 # ─────────────────────────────────────────────────────────────────
 def set_seed(seed: int):
     random.seed(seed)
@@ -32,7 +43,7 @@ def set_seed(seed: int):
     torch.cuda.manual_seed_all(seed)
 
 
-def load_panel_from_two_files(price_path: str, macro_path: str):
+def load_panel_from_two_files(price_path, macro_path):
     df_p = pd.read_csv(price_path)
     date_col_p = df_p.columns[0]
     df_p[date_col_p] = pd.to_datetime(df_p[date_col_p], dayfirst=True, errors="coerce")
@@ -97,7 +108,7 @@ def mae_rmse_np(y_true, y_pred):
 
 
 # ─────────────────────────────────────────────────────────────────
-# Dataset (unchanged)
+# Dataset
 # ─────────────────────────────────────────────────────────────────
 class PanelGraphDataset(Dataset):
     def __init__(self, returns_df, macro_df, window_size=20, horizon=5):
@@ -128,7 +139,8 @@ class PanelGraphDataset(Dataset):
         for i in range(L):
             s     = max(0, i - w + 1)
             denom = i - s + 1
-            out[i] = ((csum[i] / denom) if s == 0 else ((csum[i] - csum[s-1]) / denom)).astype(np.float32)
+            out[i] = ((csum[i] / denom) if s == 0 else
+                      ((csum[i] - csum[s-1]) / denom)).astype(np.float32)
         return out
 
     def _rolling_std(self, x, w):
@@ -143,7 +155,7 @@ class PanelGraphDataset(Dataset):
     def __getitem__(self, idx):
         t = self.valid_t[idx]
         s, e = t - (self.window_size - 1), t + 1
-        ret_win  = self.ret[s:e, :]
+        ret_win = self.ret[s:e, :]
 
         feat1 = ret_win
         feat3 = self._rolling_mean(ret_win, 3)
@@ -154,8 +166,8 @@ class PanelGraphDataset(Dataset):
         node_feat = np.nan_to_num(node_feat, nan=0.0, posinf=0.0, neginf=0.0)
 
         L_, N_, F_ = node_feat.shape
-        flat      = node_feat.reshape(L_ * N_, F_)
-        mu, sd    = flat.mean(0, keepdims=True), flat.std(0, keepdims=True) + 1e-8
+        flat = node_feat.reshape(L_ * N_, F_)
+        mu, sd = flat.mean(0, keepdims=True), flat.std(0, keepdims=True) + 1e-8
         node_feat = ((flat - mu) / sd).reshape(L_, N_, F_).astype(np.float32)
 
         if self.macro is not None:
@@ -184,14 +196,14 @@ def make_time_split(valid_t, T, train_ratio=0.7, val_ratio=0.15):
 # Evaluation
 # ─────────────────────────────────────────────────────────────────
 @torch.no_grad()
-def evaluate(model_fn, loader, device) -> Dict[str, Tuple[float, float]]:
+def evaluate(model_fn, loader, device):
     pf_t, pf_p, ma_t, ma_p, gap_t, gap_p = [], [], [], [], [], []
     for x, y, _ in loader:
         x, y = x.to(device), y.to(device)
         yp, _, _ = model_fn(x, None)
-        for lst, v in [(pf_t, seq_to_pf_ma_gap(y)[0]),  (pf_p, seq_to_pf_ma_gap(yp)[0]),
-                       (ma_t, seq_to_pf_ma_gap(y)[1]),  (ma_p, seq_to_pf_ma_gap(yp)[1]),
-                       (gap_t,seq_to_pf_ma_gap(y)[2]), (gap_p, seq_to_pf_ma_gap(yp)[2])]:
+        for lst, v in [(pf_t,  seq_to_pf_ma_gap(y)[0]),  (pf_p,  seq_to_pf_ma_gap(yp)[0]),
+                       (ma_t,  seq_to_pf_ma_gap(y)[1]),  (ma_p,  seq_to_pf_ma_gap(yp)[1]),
+                       (gap_t, seq_to_pf_ma_gap(y)[2]),  (gap_p, seq_to_pf_ma_gap(yp)[2])]:
             lst.append(v.cpu().numpy().reshape(-1))
     return {
         "PF":  mae_rmse_np(np.concatenate(pf_t),  np.concatenate(pf_p)),
@@ -201,9 +213,9 @@ def evaluate(model_fn, loader, device) -> Dict[str, Tuple[float, float]]:
 
 
 # ─────────────────────────────────────────────────────────────────
-# Training
+# Train one (gate_type, seed) combination
 # ─────────────────────────────────────────────────────────────────
-def train_one_seed(args, seed: int):
+def train_one_seed(args, seed: int, gate_type: str):
     set_seed(seed)
     device = torch.device("cuda" if (torch.cuda.is_available() and not args.cpu) else "cpu")
 
@@ -220,19 +232,31 @@ def train_one_seed(args, seed: int):
     te_loader = DataLoader(Subset(ds, te_ids), args.batch, shuffle=False, drop_last=False)
 
     x0, _, _ = ds[0]
-    L, N, F_total = x0.shape
+    _, N, F_total = x0.shape
 
-    A_mech = None
-    if args.mode in ("mech", "prior_residual"):
-        A_mech = build_adjacency_from_edges(
-            args.edges_path, list(price_cols),
-            weight_col=args.weight_col, default_weight=args.default_weight,
-        ).to(device)
+    # ── A_mech: structure × training-period correlation weights ───
+    A_mech = build_adjacency_from_edges(
+        args.edges_path, list(price_cols),
+        weight_col=args.weight_col, default_weight=args.default_weight,
+    ).to(device)
 
-    from models.gp_mech_stgnn import GPMechSTGNN
+    train_end  = int(len(returns_df) * args.train_ratio)
+    train_rets = returns_df.iloc[:train_end].values.astype(np.float32)
+    corr = np.corrcoef(train_rets.T)
+    corr = np.nan_to_num(corr, nan=0.0)
+    corr = np.abs(corr).astype(np.float32)
+    np.fill_diagonal(corr, 1.0)
+    corr_t = torch.tensor(corr, device=device)
+    A_mech = A_mech * corr_t
+    row_sum = A_mech.sum(dim=1, keepdim=True).clamp(min=1e-8)
+    A_mech  = A_mech / row_sum
+
+    # ── Model: dual-path with fixed gamma ─────────────────────────
+    from models.gp_mech_stgnn_gate import GPMechSTGNN
+    fixed_gamma = args.fixed_gamma if args.fixed_gamma >= 0.0 else None
     model = GPMechSTGNN(
         num_nodes=N, in_dim=F_total, horizon=args.horizon,
-        mode=args.mode,
+        mode="prior_residual",
         graph_hidden=args.graph_hidden,
         gcn_hidden=args.gcn_hidden,
         gru_hidden=args.gru_hidden,
@@ -240,10 +264,10 @@ def train_one_seed(args, seed: int):
         rnn_layers=args.rnn_layers,
         rnn_dropout=args.rnn_dropout,
         graph_topk=args.graph_topk,
-        gamma_init=args.gamma_init,
-        gamma_min=args.gamma_min,
-        use_graph_input_norm=not args.no_graph_norm,
-        gate_type=args.gate_type,           # ← new
+        gamma_min=0.0,
+        use_graph_input_norm=True,
+        gate_type=gate_type,
+        fixed_gamma=fixed_gamma,
     ).to(device)
 
     mse = nn.MSELoss()
@@ -253,13 +277,12 @@ def train_one_seed(args, seed: int):
         model.train() if train else model.eval()
         total_loss, n = 0.0, 0
         for x_seq, y_seq, _ in loader:
-            x_seq = x_seq.to(device)
-            y_seq = y_seq.to(device)
+            x_seq, y_seq = x_seq.to(device), y_seq.to(device)
             if train:
                 opt.zero_grad()
-                y_pred, A_learn, gamma = model(x_seq, A_mech)
+                y_pred, A_learn, _ = model(x_seq, A_mech)
                 loss = mse(y_pred, y_seq)
-                if args.lambda_anchor > 0.0 and A_mech is not None:
+                if args.lambda_anchor > 0.0:
                     loss = loss + args.lambda_anchor * model.anchor_loss(
                         A_learn, A_mech, entropy_weight=args.entropy_weight)
                 loss.backward()
@@ -267,7 +290,7 @@ def train_one_seed(args, seed: int):
                 opt.step()
             else:
                 with torch.no_grad():
-                    y_pred, A_learn, gamma = model(x_seq, A_mech)
+                    y_pred, _, _ = model(x_seq, A_mech)
                     loss = mse(y_pred, y_seq)
             total_loss += float(loss.detach()) * x_seq.size(0)
             n += x_seq.size(0)
@@ -277,14 +300,13 @@ def train_one_seed(args, seed: int):
     for ep in range(args.epochs):
         tr = _loop(tr_loader, True)
         va = _loop(va_loader, False)
-
-        if (ep + 1) % 10 == 0 or ep == 0:
-            g_stats = model.gamma_stats()
-            print(f"  ep={ep+1:3d}  train={tr:.6f}  val={va:.6f}  "
-                  f"gamma mean={g_stats['mean']:.4f} std={g_stats['std']:.4f}")
-
+        if (ep + 1) % 20 == 0:
+            gs = model.gamma_stats()
+            print(f"  [{gate_type}] seed={seed} ep={ep+1:3d} "
+                  f"train={tr:.6f} val={va:.6f} "
+                  f"γ_mean={gs['mean']:.4f} γ_std={gs['std']:.4f}")
         if va < best_val:
-            best_val   = va
+            best_val  = va
             best_state = {k: v.detach().cpu().clone() for k, v in model.state_dict().items()}
             bad = 0
         else:
@@ -295,92 +317,101 @@ def train_one_seed(args, seed: int):
     if best_state is not None:
         model.load_state_dict(best_state)
 
-    # ── Diagnostic: print final gamma distribution ─────────────────
-    g_stats = model.gamma_stats()
-    print(f"  [gamma_stats] shape={g_stats['shape']}  "
-          f"mean={g_stats['mean']:.4f}  std={g_stats['std']:.6f}  "
-          f"min={g_stats['min']:.4f}  max={g_stats['max']:.4f}")
-    if args.gate_type != "global" and g_stats['std'] < 1e-3:
-        print("  ⚠️  WARNING: gamma std < 0.001 — gate may have collapsed to scalar behaviour")
+    # ── Collapse check ─────────────────────────────────────────────
+    gs = model.gamma_stats()
+    if gate_type != "global" and gs["std"] < 1e-3:
+        print(f"  WARNING [{gate_type}] seed={seed}: "
+              f"gamma std={gs['std']:.6f} — gate may have collapsed")
 
     model_fn = lambda x, _: model(x, A_mech)
-    val_metrics  = evaluate(model_fn, va_loader, device)
     test_metrics = evaluate(model_fn, te_loader, device)
-    return val_metrics, test_metrics, g_stats
+    print(f"  [{gate_type}] seed={seed} DONE  "
+          f"PF={test_metrics['PF'][0]*100:.4f}  "
+          f"GAP={test_metrics['GAP'][0]*100:.4f}  "
+          f"γ mean={gs['mean']:.4f} std={gs['std']:.4f}")
+    return test_metrics, gs
 
 
 # ─────────────────────────────────────────────────────────────────
-# CLI
+# Main: loop over gate_types × seeds, print summary
 # ─────────────────────────────────────────────────────────────────
 def main():
-    p = argparse.ArgumentParser()
-    p.add_argument("--mode",        required=True)
-    p.add_argument("--gate_type",   default="global", choices=["global", "node", "edge"],
-                   help="Gate granularity: global (scalar) | node (N,) | edge (N,N)")
-    p.add_argument("--price_path",  required=True)
-    p.add_argument("--macro_path",  required=True)
-    p.add_argument("--edges_path",  default="")
-    p.add_argument("--weight_col",      default="w")
-    p.add_argument("--default_weight",  type=float, default=1.0)
-    p.add_argument("--window",          type=int,   default=20)
-    p.add_argument("--horizon",         type=int,   default=5)
-    p.add_argument("--train_ratio",     type=float, default=0.7)
-    p.add_argument("--val_ratio",       type=float, default=0.15)
-    p.add_argument("--batch",           type=int,   default=32)
-    p.add_argument("--epochs",          type=int,   default=50)
-    p.add_argument("--patience",        type=int,   default=10)
-    p.add_argument("--lr",              type=float, default=1e-3)
-    p.add_argument("--wd",              type=float, default=0.0)
-    p.add_argument("--graph_hidden",    type=int,   default=32)
-    p.add_argument("--gcn_hidden",      type=int,   default=32)
-    p.add_argument("--gru_hidden",      type=int,   default=64)
-    p.add_argument("--gcn_dropout",     type=float, default=0.0)
-    p.add_argument("--rnn_layers",      type=int,   default=1)
-    p.add_argument("--rnn_dropout",     type=float, default=0.0)
-    p.add_argument("--graph_topk",      type=int,   default=-1)
-    p.add_argument("--gamma_init",      type=float, default=1.5)
-    p.add_argument("--gamma_min",       type=float, default=0.3)
-    p.add_argument("--lambda_anchor",   type=float, default=0.01)
-    p.add_argument("--entropy_weight",  type=float, default=0.0)
-    p.add_argument("--no_graph_norm",   action="store_true")
-    p.add_argument("--seeds",   default="1,2,3,4,5")
-    p.add_argument("--cpu",     action="store_true")
-    p.add_argument("--out_csv", default="")
+    p = argparse.ArgumentParser(description="Gate granularity ablation (dual-path)")
+    p.add_argument("--price_path", required=True)
+    p.add_argument("--macro_path", required=True)
+    p.add_argument("--edges_path", required=True)
+    p.add_argument("--weight_col",     default="w")
+    p.add_argument("--default_weight", type=float, default=1.0)
+
+    p.add_argument("--gate_types",  nargs="+", default=["global", "node", "feat"],
+                   choices=["global", "node", "feat"],
+                   help="gate granularities to ablate")
+    p.add_argument("--fixed_gamma", type=float, default=0.5,
+                   help="fix gamma at this value; pass -1 to let model learn it")
+    p.add_argument("--seeds",       nargs="+", type=int, default=[0, 1, 2, 3, 4])
+
+    # model
+    p.add_argument("--horizon",      type=int,   default=5)
+    p.add_argument("--window",       type=int,   default=20)
+    p.add_argument("--graph_hidden", type=int,   default=32)
+    p.add_argument("--gcn_hidden",   type=int,   default=32)
+    p.add_argument("--gru_hidden",   type=int,   default=64)
+    p.add_argument("--gcn_dropout",  type=float, default=0.0)
+    p.add_argument("--rnn_layers",   type=int,   default=1)
+    p.add_argument("--rnn_dropout",  type=float, default=0.0)
+    p.add_argument("--graph_topk",   type=int,   default=5)
+
+    # training
+    p.add_argument("--epochs",         type=int,   default=100)
+    p.add_argument("--patience",       type=int,   default=15)
+    p.add_argument("--batch",          type=int,   default=32)
+    p.add_argument("--lr",             type=float, default=1e-3)
+    p.add_argument("--wd",             type=float, default=1e-4)
+    p.add_argument("--lambda_anchor",  type=float, default=0.01)
+    p.add_argument("--entropy_weight", type=float, default=0.0)
+    p.add_argument("--train_ratio",    type=float, default=0.70)
+    p.add_argument("--val_ratio",      type=float, default=0.15)
+    p.add_argument("--cpu",            action="store_true")
+    p.add_argument("--out_csv",        default="gate_ablation_results.csv")
+
     args = p.parse_args()
 
-    if args.mode in ("mech", "prior_residual") and not args.edges_path:
-        raise ValueError("--edges_path required for mech/prior_residual")
-    if args.graph_topk < 0:
-        args.graph_topk = None
+    all_rows = []
+    for gt in args.gate_types:
+        pf_vals, gap_vals = [], []
+        print(f"\n{'='*60}")
+        print(f"  gate_type={gt}  fixed_gamma={args.fixed_gamma}")
+        print(f"{'='*60}")
+        for seed in args.seeds:
+            metrics, gs = train_one_seed(args, seed, gt)
+            pf_vals.append(metrics["PF"][0] * 100)
+            gap_vals.append(metrics["GAP"][0] * 100)
 
-    seeds = [int(s.strip()) for s in args.seeds.split(",") if s.strip()]
-    rows  = []
-    for sd in seeds:
-        print(f"\n{'='*55}\nseed={sd}  gate={args.gate_type}\n{'='*55}")
-        val_m, test_m, g_stats = train_one_seed(args, sd)
-        for split_name, metrics in [("val", val_m), ("test", test_m)]:
-            for task in ["PF", "MA", "GAP"]:
-                mae, rmse = metrics[task]
-                rows.append(dict(
-                    model=f"magn_{args.mode}",
-                    gate=args.gate_type,
-                    seed=sd,
-                    split=split_name,
-                    task=task,
-                    mae=mae,
-                    rmse=rmse,
-                    gamma_mean=g_stats['mean'],
-                    gamma_std=g_stats['std'],
-                ))
-        print(f"[seed={sd}] test PF={test_m['PF']}  MA={test_m['MA']}  GAP={test_m['GAP']}")
+        pf_arr  = np.array(pf_vals)
+        gap_arr = np.array(gap_vals)
+        row = {
+            "gate_type":   gt,
+            "fixed_gamma": args.fixed_gamma,
+            "PF_mean":     pf_arr.mean(),
+            "PF_std":      pf_arr.std(ddof=1),
+            "PF_CV%":      pf_arr.std(ddof=1) / pf_arr.mean() * 100,
+            "GAP_mean":    gap_arr.mean(),
+            "GAP_std":     gap_arr.std(ddof=1),
+            "GAP_CV%":     gap_arr.std(ddof=1) / gap_arr.mean() * 100,
+        }
+        all_rows.append(row)
+        print(f"\n  >> {gt}: PF={row['PF_mean']:.4f}±{row['PF_std']:.4f} "
+              f"(CV={row['PF_CV%']:.2f}%)  "
+              f"GAP={row['GAP_mean']:.4f}±{row['GAP_std']:.4f} "
+              f"(CV={row['GAP_CV%']:.2f}%)")
 
-    df = pd.DataFrame(rows)
-    if args.out_csv:
-        os.makedirs(os.path.dirname(args.out_csv) or ".", exist_ok=True)
-        df.to_csv(args.out_csv, index=False)
-        print("Saved:", args.out_csv)
-    else:
-        print(df.groupby(["gate", "split", "task"])[["mae", "rmse"]].mean())
+    df = pd.DataFrame(all_rows)
+    print("\n\n" + "="*60)
+    print("GATE GRANULARITY ABLATION SUMMARY")
+    print("="*60)
+    print(df.to_string(index=False, float_format=lambda x: f"{x:.4f}"))
+    df.to_csv(args.out_csv, index=False)
+    print(f"\nSaved → {args.out_csv}")
 
 
 if __name__ == "__main__":
