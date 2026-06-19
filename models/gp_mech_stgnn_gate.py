@@ -1,14 +1,4 @@
 # models/gp_mech_stgnn_gate.py  (dual-path gate-granularity version)
-#
-# Architecture: dual-path GCN, feature-space mixing.
-#   H_learn = GCN_learn(X, A_learn)          data-driven branch
-#   H_mech  = GCN_mech (X, A_mech)           mechanism-prior branch
-#   H       = γ · H_mech + (1-γ) · H_learn  feature-space fusion
-#
-# gate_type controls the shape of γ:
-#   "global"  : scalar        — one gate for the whole model      (paper default)
-#   "node"    : (N,)          — per-node  mixing weight
-#   "feat"    : (gcn_hidden,) — per-feature-dim mixing weight
 
 import torch
 import torch.nn as nn
@@ -62,7 +52,7 @@ class GPMechSTGNN(nn.Module):
                 init_tensor = torch.tensor(float(gamma_init))
             elif gate_type == "node":
                 init_tensor = torch.full((N,), float(gamma_init))
-            else:
+            else:  # "feat"
                 init_tensor = torch.full((d,), float(gamma_init))
             self.gamma_raw = nn.Parameter(init_tensor)
         else:
@@ -70,7 +60,9 @@ class GPMechSTGNN(nn.Module):
 
     def _gamma(self):
         if self.fixed_gamma is not None:
-            dev = next(self.parameters()).device if len(list(self.parameters())) else torch.device("cpu")
+            # fixed scalar — always returns 0-dim tensor, broadcasts in _mix_feat
+            params = list(self.parameters())
+            dev = params[0].device if params else torch.device("cpu")
             return torch.tensor(float(self.fixed_gamma), device=dev)
         return self.gamma_min + (1.0 - self.gamma_min) * torch.sigmoid(self.gamma_raw)
 
@@ -87,11 +79,12 @@ class GPMechSTGNN(nn.Module):
 
     def _mix_feat(self, H_learn, H_mech):
         gamma = self._gamma()
-        if self.gate_type == "global":
+        # fixed_gamma is always scalar — skip reshape and let it broadcast
+        if self.fixed_gamma is not None or self.gate_type == "global":
             g = gamma
         elif self.gate_type == "node":
             g = gamma.view(1, self.num_nodes, 1)
-        else:
+        else:  # "feat"
             g = gamma.view(1, 1, self.gcn_hidden)
         return g * H_mech + (1.0 - g) * H_learn
 
